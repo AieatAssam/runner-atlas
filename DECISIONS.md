@@ -129,3 +129,9 @@ Consequences: one more schema field (about 20 bytes). Local runs exercise the wh
 Context: an independent review of SPEC found gaps that would surface as schema or rendering bugs.
 Decision: `surveyDay` counts calendar UTC dates so it agrees with `opensOn` and the daily field log; field log rule 3 states its own expected-slot count instead of "of 24"; `singleCoreScore`, `multiCoreScore` and `memBandwidthGBs` are nullable when their step is truncated; benchmark `domain` may be null, KDE has defined fallbacks for zero spread; day-aligned arrays carry `null` on gap days; effect rows, ACF lags and Day-0 `Record`s have fixed lengths and key sets; the in-job collector check is structural with full ajv validation in `publish`; `publish` checks out with `persist-credentials: true` while `collect` uses `false`; every panel has loading, charting, error and full states.
 Consequences: the schemas in M2 follow SPEC section 4.2 as amended; no prior decision changes.
+
+## D-022 Toolchain majors: TypeScript 7, Vite 8, Vitest 5 (2026-11-22)
+
+Context: M3 installed the current majors: `typescript@7` (native compiler), `vite@8` (Rolldown), `vitest@5`, `@playwright/test@1.65`. SPEC names the tools but not versions.
+Decision: keep them. TypeScript 7 rejects enums, parameter properties and value imports of types under the repo `tsconfig.json`, so `npm run typecheck` still guards Node type stripping (D-014). Vite, Vitest and `@axe-core/playwright` need Node `>=22.12`; `engines` asks for `>=22.18.0`, so CI's Node 22 covers them.
+Consequences: TypeScript 7 checks side-effect imports by default, so `import './x.css'` fails typecheck until M8 adds a `*.css` module declaration (or `vite/client` types). `npm run preview` binds `127.0.0.1` so Playwright's `webServer` URL matches on hosts where `localhost` resolves to `::1`.

@@ -1,0 +1,29 @@
+Runner Atlas
+Copyright 2026 Aieat Assam
+
+This product includes software and data from the following sources.
+See THIRD_PARTY_LICENSES.md for licence texts and full attribution.
+
+Vendored agent skills (.claude/skills/)
+  - hallmark: MIT License, Copyright (c) 2026 Hallmark contributors (https://github.com/Nutlope/hallmark)
+  - frontend-design: Apache License 2.0 (https://github.com/anthropics/skills)
+  - impeccable: Apache License 2.0, Copyright 2025 Paul Bakaus (https://github.com/pbakaus/impeccable)
+
+Bundled fonts (site/, loaded from npm via Fontsource)
+  - Hepta Slab, Copyright 2018 The Hepta Slab Project Authors, SIL Open Font License 1.1
+  - Public Sans, Copyright 2015 The Public Sans Project Authors, SIL Open Font License 1.1
+  - IBM Plex Mono, Copyright 2017 IBM Corp., SIL Open Font License 1.1
+
+Map data
+  - Natural Earth vector data (public domain), distributed as TopoJSON via the world-atlas package
+    (Copyright 2013-2019 Michael Bostock, ISC). Used for the region map and globe.
+
+Data sources
+  - GitHub /meta endpoint (https://api.github.com/meta): published GitHub Actions and service CIDR ranges,
+    used to match observed network addresses to cloud regions. IP addresses are never stored.
+  - Azure service tags, AWS ip-ranges.json and GitHub /meta, used to curate collector/data/region-cidrs.json
+    (region CIDR table; see SPEC 3.4).
+  - Azure and AWS region names and city-level coordinates in aggregator/data/region-coords.json are
+    curated from the providers' public region information.
+  - Cloudflare trace endpoint (https://1.1.1.1/cdn-cgi/trace): read in memory for the egress IP when the
+    Azure instance metadata service is unreachable (D-011). The IP is never stored.
