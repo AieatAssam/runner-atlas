@@ -1,0 +1,415 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "runner-atlas/rollouts@1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "runner-atlas/rollouts@1"
+    },
+    "range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/dateRange"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "n": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "samples",
+        "runs"
+      ]
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/date"
+      }
+    },
+    "byLabel": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "$ref": "#/$defs/runnerLabel"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "version": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "firstSeen": {
+                  "$ref": "#/$defs/date"
+                },
+                "lastSeen": {
+                  "$ref": "#/$defs/date"
+                },
+                "share": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              },
+              "required": [
+                "version",
+                "firstSeen",
+                "lastSeen",
+                "share"
+              ]
+            },
+            "maxItems": 8
+          },
+          "families": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "share": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              },
+              "required": [
+                "family",
+                "share"
+              ]
+            },
+            "maxItems": 8
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "date": {
+                  "$ref": "#/$defs/date"
+                },
+                "from": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "date",
+                "from",
+                "to"
+              ]
+            }
+          }
+        },
+        "required": [
+          "label",
+          "images",
+          "families",
+          "events"
+        ]
+      },
+      "maxItems": 6
+    },
+    "changePoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "$ref": "#/$defs/runnerLabel"
+          },
+          "metric": {
+            "enum": [
+              "singleCoreScore",
+              "multiCoreScore",
+              "seqWriteMBs",
+              "seqReadMBs",
+              "memBandwidthGBs",
+              "netTtfbMs",
+              "netMbps",
+              "totalDelaySec"
+            ]
+          },
+          "date": {
+            "$ref": "#/$defs/date"
+          },
+          "before": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "median": {
+                "type": "number"
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "median",
+              "n"
+            ]
+          },
+          "after": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "median": {
+                "type": "number"
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "median",
+              "n"
+            ]
+          },
+          "shiftPct": {
+            "type": "number"
+          },
+          "u": {
+            "type": "number",
+            "minimum": 0
+          },
+          "pRaw": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "pAdj": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "nearImageEvent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "label",
+          "metric",
+          "date",
+          "before",
+          "after",
+          "shiftPct",
+          "u",
+          "pRaw",
+          "pAdj",
+          "nearImageEvent"
+        ]
+      }
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "test": {
+          "const": "mann-whitney-u"
+        },
+        "alpha": {
+          "const": 0.05
+        },
+        "minSegmentDays": {
+          "const": 3
+        },
+        "minSegmentSamples": {
+          "const": 30
+        },
+        "minShiftPct": {
+          "const": 3
+        },
+        "maxPerSeries": {
+          "const": 3
+        }
+      },
+      "required": [
+        "test",
+        "alpha",
+        "minSegmentDays",
+        "minSegmentSamples",
+        "minShiftPct",
+        "maxPerSeries"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "range",
+    "n",
+    "days",
+    "byLabel",
+    "changePoints",
+    "method"
+  ],
+  "$defs": {
+    "runnerLabel": {
+      "enum": [
+        "ubuntu-24.04",
+        "ubuntu-24.04-arm",
+        "windows-2025",
+        "windows-11-arm",
+        "macos-15",
+        "macos-15-intel"
+      ]
+    },
+    "metricId": {
+      "enum": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+    },
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/date"
+        },
+        "to": {
+          "$ref": "#/$defs/date"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "ci95": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "q4": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "median": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p95": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "median",
+        "p25",
+        "p75",
+        "p95"
+      ]
+    },
+    "q5": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "p10": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p50": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p90": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90"
+      ]
+    },
+    "familyCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "family",
+        "n"
+      ]
+    }
+  }
+}

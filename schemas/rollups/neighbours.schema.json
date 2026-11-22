@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "runner-atlas/neighbours@1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "runner-atlas/neighbours@1"
+    },
+    "range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/dateRange"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "n": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "samples",
+        "runs"
+      ]
+    },
+    "overall": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "spearmanRho": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -1,
+          "maximum": 1
+        },
+        "rhoCi95": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ci95"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rhoAbs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -1,
+          "maximum": 1
+        },
+        "pearsonR": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -1,
+          "maximum": 1
+        },
+        "slope": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "intercept": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "n",
+        "spearmanRho",
+        "rhoCi95",
+        "rhoAbs",
+        "pearsonR",
+        "slope",
+        "intercept"
+      ]
+    },
+    "buckets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "lo": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hi": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "zMedian": {
+            "type": "number"
+          },
+          "zP25": {
+            "type": "number"
+          },
+          "zP75": {
+            "type": "number"
+          },
+          "absZMedian": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "lo",
+          "hi",
+          "n",
+          "zMedian",
+          "zP25",
+          "zP75",
+          "absZMedian"
+        ]
+      },
+      "maxItems": 5
+    },
+    "points": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 6
+        },
+        "families": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 1500
+        },
+        "steal": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "maxItems": 1500
+        },
+        "z": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 1500
+        },
+        "label": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maxItems": 1500
+        },
+        "family": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maxItems": 1500
+        }
+      },
+      "required": [
+        "labels",
+        "families",
+        "steal",
+        "z",
+        "label",
+        "family"
+      ]
+    },
+    "byHardware": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "$ref": "#/$defs/runnerLabel"
+          },
+          "cpuFamily": {
+            "type": "string",
+            "minLength": 1
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "stealMedian": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "stealP90": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "rho": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -1,
+            "maximum": 1
+          },
+          "slope": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "cpuFamily",
+          "n",
+          "stealMedian",
+          "stealP90",
+          "rho",
+          "slope"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "range",
+    "n",
+    "overall",
+    "buckets",
+    "points",
+    "byHardware"
+  ],
+  "$defs": {
+    "runnerLabel": {
+      "enum": [
+        "ubuntu-24.04",
+        "ubuntu-24.04-arm",
+        "windows-2025",
+        "windows-11-arm",
+        "macos-15",
+        "macos-15-intel"
+      ]
+    },
+    "metricId": {
+      "enum": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+    },
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/date"
+        },
+        "to": {
+          "$ref": "#/$defs/date"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "ci95": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "q4": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "median": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p95": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "median",
+        "p25",
+        "p75",
+        "p95"
+      ]
+    },
+    "q5": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "p10": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p50": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p90": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90"
+      ]
+    },
+    "familyCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "family",
+        "n"
+      ]
+    }
+  }
+}

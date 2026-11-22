@@ -200,7 +200,8 @@ Collector calls `GET /repos/{repo}/actions/runs/{run_id}` and `.../runs/{run_id}
 - `cpuFamily`: normalized model (`aggregator/src/hardware.ts` regex table: strip `(R)`, `(TM)`, `CPU @ x GHz`, core counts; e.g. `AMD EPYC 7763`, `Intel Xeon Platinum 8370C`, `Apple M1 (Virtual)`, `Neoverse-N2`), unknown -> `"unknown"`.
 - Region key: `place.region ?? place.inferredRegion ?? "unknown"`.
 - Subsamples: select the K samples with the lowest `fnv1a32(id)` per stratum. Stable as data grows.
-- Every rollup starts with `schema`, `range: {from, to} | null` (`YYYY-MM-DD`), `n: {samples, runs}`.
+- Every rollup starts with `schema`, `range: {from, to} | null` (`YYYY-MM-DD`), `n: {samples, runs}`. `schema` is `"runner-atlas/<name>@1"` (`manifest` included), matching each schema file's `title`.
+- Schema files use JSON Schema 2020-12 `pattern` for dates and timestamps, never `format`, so they compile under plain `ajv/dist/2020` strict mode without `ajv-formats`. Known ceiling: calendar-impossible dates such as `2026-02-30` pass the regex. Cross-field rules JSON Schema cannot express (equal column lengths in `points`, `daily` arrays aligned to `days`, drift cell order, `id` label equal to `label`) are aggregator tests.
 
 ### 4.2 Files under `data/rollups/` (`shared/types/rollups.ts`)
 

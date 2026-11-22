@@ -1,0 +1,1410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "runner-atlas/seasonality@1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "runner-atlas/seasonality@1"
+    },
+    "range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/dateRange"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "n": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "samples",
+        "runs"
+      ]
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/date"
+      }
+    },
+    "daily": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "singleCoreScore": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        },
+        "multiCoreScore": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        },
+        "seqWriteMBs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        },
+        "seqReadMBs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        },
+        "memBandwidthGBs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        },
+        "netTtfbMs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        },
+        "netMbps": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        },
+        "totalDelaySec": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "n": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "p10": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "p90": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "roll7": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p10": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p50": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "p90": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "p10",
+                "p50",
+                "p90"
+              ]
+            }
+          },
+          "required": [
+            "n",
+            "p10",
+            "p50",
+            "p90",
+            "roll7"
+          ]
+        }
+      },
+      "required": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps",
+        "totalDelaySec"
+      ]
+    },
+    "weekdayEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "totalDelaySec": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "weekday": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "effect": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ci95": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ci95"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "weekday",
+              "n",
+              "effect",
+              "ci95"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "n": {
+                      "type": "integer",
+                      "maximum": 2
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "effect": {
+                      "type": "null"
+                    },
+                    "ci95": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 7,
+          "maxItems": 7
+        },
+        "singleCoreScore": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "weekday": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "effect": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ci95": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ci95"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "weekday",
+              "n",
+              "effect",
+              "ci95"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "n": {
+                      "type": "integer",
+                      "maximum": 2
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "effect": {
+                      "type": "null"
+                    },
+                    "ci95": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 7,
+          "maxItems": 7
+        }
+      },
+      "required": [
+        "totalDelaySec",
+        "singleCoreScore"
+      ]
+    },
+    "diurnalEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "totalDelaySec": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "hourUtc": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 23
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "effect": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ci95": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ci95"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "hourUtc",
+              "n",
+              "effect",
+              "ci95"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "n": {
+                      "type": "integer",
+                      "maximum": 2
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "effect": {
+                      "type": "null"
+                    },
+                    "ci95": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 24,
+          "maxItems": 24
+        },
+        "singleCoreScore": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "hourUtc": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 23
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "effect": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ci95": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ci95"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "hourUtc",
+              "n",
+              "effect",
+              "ci95"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "n": {
+                      "type": "integer",
+                      "maximum": 2
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "effect": {
+                      "type": "null"
+                    },
+                    "ci95": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 24,
+          "maxItems": 24
+        }
+      },
+      "required": [
+        "totalDelaySec",
+        "singleCoreScore"
+      ]
+    },
+    "acf": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dailyTotalDelay": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "minItems": 14,
+          "maxItems": 14
+        },
+        "hourlyTotalDelay": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "minItems": 168,
+          "maxItems": 168
+        }
+      },
+      "required": [
+        "dailyTotalDelay",
+        "hourlyTotalDelay"
+      ]
+    },
+    "trend": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "singleCoreScore": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        },
+        "multiCoreScore": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        },
+        "seqWriteMBs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        },
+        "seqReadMBs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        },
+        "memBandwidthGBs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        },
+        "netTtfbMs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        },
+        "netMbps": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        },
+        "totalDelaySec": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "theilSenPerWeek": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "theilSenPerWeek",
+            "ci95"
+          ]
+        }
+      },
+      "required": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps",
+        "totalDelaySec"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "range",
+    "n",
+    "days",
+    "daily",
+    "weekdayEffect",
+    "diurnalEffect",
+    "acf",
+    "trend"
+  ],
+  "$defs": {
+    "runnerLabel": {
+      "enum": [
+        "ubuntu-24.04",
+        "ubuntu-24.04-arm",
+        "windows-2025",
+        "windows-11-arm",
+        "macos-15",
+        "macos-15-intel"
+      ]
+    },
+    "metricId": {
+      "enum": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+    },
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/date"
+        },
+        "to": {
+          "$ref": "#/$defs/date"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "ci95": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "q4": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "median": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p95": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "median",
+        "p25",
+        "p75",
+        "p95"
+      ]
+    },
+    "q5": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "p10": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p50": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p90": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90"
+      ]
+    },
+    "familyCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "family",
+        "n"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1045 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "runner-atlas/benchmarks@1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "runner-atlas/benchmarks@1"
+    },
+    "range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/dateRange"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "n": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "samples",
+        "runs"
+      ]
+    },
+    "metrics": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "singleCoreScore"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "better": {
+              "enum": [
+                "higher",
+                "lower"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 64,
+              "anyOf": [
+                {
+                  "maxItems": 0
+                },
+                {
+                  "minItems": 64
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "unit",
+            "better",
+            "n",
+            "domain",
+            "grid"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "maximum": 0
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "domain": {
+                    "type": "null"
+                  },
+                  "grid": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "multiCoreScore"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "better": {
+              "enum": [
+                "higher",
+                "lower"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 64,
+              "anyOf": [
+                {
+                  "maxItems": 0
+                },
+                {
+                  "minItems": 64
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "unit",
+            "better",
+            "n",
+            "domain",
+            "grid"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "maximum": 0
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "domain": {
+                    "type": "null"
+                  },
+                  "grid": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "seqWriteMBs"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "better": {
+              "enum": [
+                "higher",
+                "lower"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 64,
+              "anyOf": [
+                {
+                  "maxItems": 0
+                },
+                {
+                  "minItems": 64
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "unit",
+            "better",
+            "n",
+            "domain",
+            "grid"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "maximum": 0
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "domain": {
+                    "type": "null"
+                  },
+                  "grid": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "seqReadMBs"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "better": {
+              "enum": [
+                "higher",
+                "lower"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 64,
+              "anyOf": [
+                {
+                  "maxItems": 0
+                },
+                {
+                  "minItems": 64
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "unit",
+            "better",
+            "n",
+            "domain",
+            "grid"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "maximum": 0
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "domain": {
+                    "type": "null"
+                  },
+                  "grid": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "memBandwidthGBs"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "better": {
+              "enum": [
+                "higher",
+                "lower"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 64,
+              "anyOf": [
+                {
+                  "maxItems": 0
+                },
+                {
+                  "minItems": 64
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "unit",
+            "better",
+            "n",
+            "domain",
+            "grid"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "maximum": 0
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "domain": {
+                    "type": "null"
+                  },
+                  "grid": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "netTtfbMs"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "better": {
+              "enum": [
+                "higher",
+                "lower"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 64,
+              "anyOf": [
+                {
+                  "maxItems": 0
+                },
+                {
+                  "minItems": 64
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "unit",
+            "better",
+            "n",
+            "domain",
+            "grid"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "maximum": 0
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "domain": {
+                    "type": "null"
+                  },
+                  "grid": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "netMbps"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "better": {
+              "enum": [
+                "higher",
+                "lower"
+              ]
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ci95"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "grid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 64,
+              "anyOf": [
+                {
+                  "maxItems": 0
+                },
+                {
+                  "minItems": 64
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "unit",
+            "better",
+            "n",
+            "domain",
+            "grid"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "maximum": 0
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "domain": {
+                    "type": "null"
+                  },
+                  "grid": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false,
+      "minItems": 7
+    },
+    "byLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "singleCoreScore": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "multiCoreScore": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "seqWriteMBs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "seqReadMBs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "memBandwidthGBs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "netTtfbMs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "netMbps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        }
+      },
+      "required": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps"
+      ]
+    },
+    "byHardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "singleCoreScore": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "multiCoreScore": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "seqWriteMBs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "seqReadMBs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "memBandwidthGBs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "netTtfbMs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        },
+        "netMbps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/groupSummary"
+          }
+        }
+      },
+      "required": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps"
+      ]
+    },
+    "points": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 6
+        },
+        "families": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 2000
+        },
+        "id": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 96,
+            "pattern": "^([0-9]+\\.[1-9][0-9]*\\.(ubuntu-24\\.04|ubuntu-24\\.04-arm|windows-2025|windows-11-arm|macos-15|macos-15-intel)\\.[1-9][0-9]*|local\\.[0-9]+\\.(ubuntu-24\\.04|ubuntu-24\\.04-arm|windows-2025|windows-11-arm|macos-15|macos-15-intel)\\.1)$"
+          },
+          "maxItems": 2000
+        },
+        "label": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maxItems": 2000
+        },
+        "family": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maxItems": 2000
+        },
+        "single": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2000
+        },
+        "write": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2000
+        },
+        "mem": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2000
+        },
+        "multi": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2000
+        },
+        "date": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/date"
+          },
+          "maxItems": 2000
+        }
+      },
+      "required": [
+        "labels",
+        "families",
+        "id",
+        "label",
+        "family",
+        "single",
+        "write",
+        "mem",
+        "multi",
+        "date"
+      ]
+    },
+    "beeswarm": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "maxItems": 720,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "range",
+    "n",
+    "metrics",
+    "byLabel",
+    "byHardware",
+    "points",
+    "beeswarm"
+  ],
+  "$defs": {
+    "runnerLabel": {
+      "enum": [
+        "ubuntu-24.04",
+        "ubuntu-24.04-arm",
+        "windows-2025",
+        "windows-11-arm",
+        "macos-15",
+        "macos-15-intel"
+      ]
+    },
+    "metricId": {
+      "enum": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+    },
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/date"
+        },
+        "to": {
+          "$ref": "#/$defs/date"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "ci95": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "q4": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "median": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p95": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "median",
+        "p25",
+        "p75",
+        "p95"
+      ]
+    },
+    "q5": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "p10": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p50": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p90": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90"
+      ]
+    },
+    "familyCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "family",
+        "n"
+      ]
+    },
+    "groupSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/runnerLabel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cpuFamily": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "q": {
+          "$ref": "#/$defs/q5"
+        },
+        "mad": {
+          "type": "number",
+          "minimum": 0
+        },
+        "kde": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "maxItems": 64,
+          "anyOf": [
+            {
+              "maxItems": 0
+            },
+            {
+              "minItems": 64
+            }
+          ]
+        },
+        "hist": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 32,
+          "maxItems": 32
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "cpuFamily",
+        "n",
+        "q",
+        "mad",
+        "kde",
+        "hist"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "n": {
+                "type": "integer",
+                "maximum": 4
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kde": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

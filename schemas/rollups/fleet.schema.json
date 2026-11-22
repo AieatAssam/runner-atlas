@@ -1,0 +1,460 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "runner-atlas/fleet@1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "runner-atlas/fleet@1"
+    },
+    "range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/dateRange"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "n": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "samples",
+        "runs"
+      ]
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "$ref": "#/$defs/runnerLabel"
+          },
+          "os": {
+            "type": "string",
+            "minLength": 1
+          },
+          "arch": {
+            "type": "string",
+            "minLength": 1
+          },
+          "samples": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cpuFamilies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/familyCount"
+            }
+          },
+          "memGB": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/q5"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diskKinds": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nvme": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "ssd": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "hdd": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "virtual": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unknown": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "imageVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "agentVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "os",
+          "arch",
+          "samples",
+          "runs",
+          "cpuFamilies",
+          "memGB",
+          "diskKinds",
+          "imageVersion",
+          "agentVersion"
+        ]
+      },
+      "maxItems": 6
+    },
+    "breakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "osVersions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "key",
+              "n"
+            ]
+          }
+        },
+        "imageVersions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "key",
+              "n"
+            ]
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "n": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "key",
+              "n"
+            ]
+          }
+        }
+      },
+      "required": [
+        "osVersions",
+        "imageVersions",
+        "regions"
+      ]
+    },
+    "sankey": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "label",
+                  "hardware",
+                  "region"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name"
+            ]
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "source",
+              "target",
+              "value"
+            ]
+          }
+        }
+      },
+      "required": [
+        "nodes",
+        "links"
+      ]
+    },
+    "recentSamples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 96,
+            "pattern": "^([0-9]+\\.[1-9][0-9]*\\.(ubuntu-24\\.04|ubuntu-24\\.04-arm|windows-2025|windows-11-arm|macos-15|macos-15-intel)\\.[1-9][0-9]*|local\\.[0-9]+\\.(ubuntu-24\\.04|ubuntu-24\\.04-arm|windows-2025|windows-11-arm|macos-15|macos-15-intel)\\.1)$"
+          },
+          "collectedAtIso": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$"
+          },
+          "label": {
+            "$ref": "#/$defs/runnerLabel"
+          },
+          "cpuFamily": {
+            "type": "string",
+            "minLength": 1
+          },
+          "region": {
+            "type": "string",
+            "minLength": 1
+          },
+          "singleCoreScore": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "totalDelaySec": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "collectedAtIso",
+          "label",
+          "cpuFamily",
+          "region",
+          "singleCoreScore",
+          "totalDelaySec"
+        ]
+      },
+      "maxItems": 20
+    }
+  },
+  "required": [
+    "schema",
+    "range",
+    "n",
+    "labels",
+    "breakdown",
+    "sankey",
+    "recentSamples"
+  ],
+  "$defs": {
+    "runnerLabel": {
+      "enum": [
+        "ubuntu-24.04",
+        "ubuntu-24.04-arm",
+        "windows-2025",
+        "windows-11-arm",
+        "macos-15",
+        "macos-15-intel"
+      ]
+    },
+    "metricId": {
+      "enum": [
+        "singleCoreScore",
+        "multiCoreScore",
+        "seqWriteMBs",
+        "seqReadMBs",
+        "memBandwidthGBs",
+        "netTtfbMs",
+        "netMbps"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+    },
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/date"
+        },
+        "to": {
+          "$ref": "#/$defs/date"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "ci95": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "q4": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "median": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p95": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "median",
+        "p25",
+        "p75",
+        "p95"
+      ]
+    },
+    "q5": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "p10": {
+          "type": "number"
+        },
+        "p25": {
+          "type": "number"
+        },
+        "p50": {
+          "type": "number"
+        },
+        "p75": {
+          "type": "number"
+        },
+        "p90": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "p10",
+        "p25",
+        "p50",
+        "p75",
+        "p90"
+      ]
+    },
+    "familyCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "family",
+        "n"
+      ]
+    }
+  }
+}
