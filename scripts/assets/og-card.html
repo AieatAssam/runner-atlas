@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Runner Atlas</title>
+  <style>
+    @font-face {
+      font-family: "Hepta Slab";
+      src: url("../../node_modules/@fontsource-variable/hepta-slab/files/hepta-slab-latin-wght-normal.woff2") format("woff2");
+      font-weight: 100 900;
+    }
+    @font-face {
+      font-family: "Public Sans";
+      src: url("../../node_modules/@fontsource-variable/public-sans/files/public-sans-latin-wght-normal.woff2") format("woff2");
+      font-weight: 100 900;
+    }
+    body {
+      box-sizing: border-box;
+      width: 1200px;
+      height: 630px;
+      margin: 0;
+      padding: 48px;
+      display: flex;
+      background: #f3f0e7;
+      color: #1a2834;
+    }
+    main {
+      box-sizing: border-box;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      border: 1px solid #cbc7bd;
+      padding-inline: 24px;
+    }
+    header { flex: 0 0 358px; }
+    h1 { margin: 0; font: 700 56px/1.08 "Hepta Slab"; letter-spacing: -.01em; }
+    p { margin: 24px 0 0; max-width: 350px; font: 400 25px/1.48 "Public Sans"; }
+    svg { width: 698px; flex: none; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .graticule { stroke: #cbc7bd; stroke-width: 2.25; }
+    .coast { stroke: #33424f; stroke-width: 2.8; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Runner Atlas</h1>
+      <p>An hourly survey of hardware, region, speed and start delay.</p>
+    </header>
+    <svg viewBox="0 0 1600 800" aria-hidden="true"><!-- MAP PATHS --></svg>
+  </main>
+</body>
+</html>
