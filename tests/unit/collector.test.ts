@@ -512,6 +512,7 @@ describe('agent version helpers', () => {
     expect(semverFromPath('/home/runner/runners/2.338.2/bin/Runner.Worker')).toBe('2.338.2');
     expect(semverFromPath('/home/runner/actions-runner/bin.2.329.0/Runner.Listener')).toBe('2.329.0');
     expect(semverFromPath('C:\\agents\\externals.2.330.0\\x')).toBe('2.330.0');
+    expect(semverFromPath('C:\\runners\\2.338.2\\bin\\Runner.Worker.exe')).toBe('2.338.2');
     expect(semverFromPath('/Users/runner/work/_temp')).toBeNull();
     expect(semverFromPath('/home/runner/runners/2.338.2/bin/Runner.Worker.dll')).toBe('2.338.2');
   });

@@ -226,10 +226,10 @@ function binVersions(root: string): string[] {
 }
 
 // Version from the executable's own path, else from `<sibling> --version`.
-async function versionFromExecutable(exePath: string, exeName: string): Promise<string | null> {
+async function versionFromExecutable(exePath: string, exeName: string, timeoutMs = AGENT_ATTEMPT_MS): Promise<string | null> {
   const fromPath = semverFromPath(exePath);
   if (fromPath) return fromPath;
-  const out = await run(join(dirname(exePath), exeName), ['--version'], AGENT_ATTEMPT_MS);
+  const out = await run(join(dirname(exePath), exeName), ['--version'], timeoutMs);
   const v = out?.trim().split('\n')[0]?.trim() ?? '';
   return SEMVER.test(v) ? v : null;
 }
@@ -238,6 +238,7 @@ export async function readAgentVersion(opts: { home: string; runnerTemp: string 
   const { home, runnerTemp, platform } = opts;
   const exeName = platform === 'win32' ? 'Runner.Listener.exe' : 'Runner.Listener';
   const newest = (vs: string[]): string => vs.reduce((best, v) => (compareSemver(v, best) > 0 ? v : best));
+  const timeoutMs = platform === 'win32' ? SUBPROCESS_TIMEOUT_MS : AGENT_ATTEMPT_MS;
 
   // 1a. Home-scoped scan first. A hit returns here, so host-global paths are never read.
   const homeScanned = [
@@ -249,8 +250,8 @@ export async function readAgentVersion(opts: { home: string; runnerTemp: string 
   // 1b. Host-global system dirs, unless the caller opts out (tests on hosted CI).
   if (!opts.skipSystemPaths) {
     const systemScanned = [
-      ...(platform === 'win32' ? ['C:\\agents', 'D:\\agents'] : ['/home/runner/runners', '/Users/runner/runners', '/opt/runner']).flatMap(subdirNames),
-      ...(platform === 'win32' ? ['C:\\actions-runner'] : ['/home/runner/actions-runner', '/Users/runner/actions-runner', '/opt/actions-runner']).flatMap(binVersions),
+      ...(platform === 'win32' ? ['C:\\runners', 'D:\\runners', 'C:\\agents', 'D:\\agents'] : ['/home/runner/runners', '/Users/runner/runners', '/opt/runner']).flatMap(subdirNames),
+      ...(platform === 'win32' ? ['C:\\actions-runner', 'D:\\actions-runner'] : ['/home/runner/actions-runner', '/Users/runner/actions-runner', '/opt/actions-runner']).flatMap(binVersions),
     ].filter((v) => SEMVER.test(v));
     if (systemScanned.length > 0) return newest(systemScanned);
   }
@@ -281,18 +282,22 @@ export async function readAgentVersion(opts: { home: string; runnerTemp: string 
       pid = parsed.ppid;
     }
   } else if (platform === 'win32' && !opts.skipSystemPaths) {
-    const exePath = (await run('powershell', ['-NoProfile', '-NonInteractive', '-Command', "Get-CimInstance Win32_Process -Filter \"Name='Runner.Worker.exe' OR Name='Runner.Listener.exe'\" | Select-Object -First 1 -ExpandProperty ExecutablePath"], AGENT_ATTEMPT_MS))?.trim() ?? '';
-    if (exePath) {
-      const v = await versionFromExecutable(exePath, 'Runner.Listener.exe');
+    // Native pwsh first; powershell only when pwsh yields no path. GetProcessesByName is the fast path; CIM is the fallback when MainModule is restricted.
+    const psCmd = "$p = [System.Diagnostics.Process]::GetProcessesByName('Runner.Worker') + [System.Diagnostics.Process]::GetProcessesByName('Runner.Listener') | Select-Object -First 1; if ($p) { try { $p.MainModule.FileName } catch { (Get-CimInstance Win32_Process -Filter \"ProcessId=$($p.Id)\").ExecutablePath } }";
+    for (const shell of ['pwsh', 'powershell']) {
+      const exePath = (await run(shell, ['-NoProfile', '-NonInteractive', '-Command', psCmd], SUBPROCESS_TIMEOUT_MS))?.trim() ?? '';
+      if (!exePath) continue;
+      const v = await versionFromExecutable(exePath, 'Runner.Listener.exe', timeoutMs);
       if (v) return v;
+      break;
     }
   }
 
   // 3. Direct `Runner.Listener --version` on the candidate roots.
-  const systemRoot = platform === 'win32' ? 'C:\\actions-runner' : '/opt/actions-runner';
-  const roots = [...new Set([runnerTemp ? dirname(runnerTemp) : null, runnerTemp ? dirname(dirname(runnerTemp)) : null, join(home, 'actions-runner'), ...(opts.skipSystemPaths ? [] : [systemRoot])].filter((r): r is string => r !== null))];
+  const systemRoots = platform === 'win32' ? ['C:\\actions-runner', 'D:\\actions-runner'] : ['/opt/actions-runner'];
+  const roots = [...new Set([runnerTemp ? dirname(runnerTemp) : null, runnerTemp ? dirname(dirname(runnerTemp)) : null, join(home, 'actions-runner'), ...(opts.skipSystemPaths ? [] : systemRoots)].filter((r): r is string => r !== null))];
   for (const root of roots) {
-    const out = await run(join(root, 'bin', exeName), ['--version'], AGENT_ATTEMPT_MS);
+    const out = await run(join(root, 'bin', exeName), ['--version'], timeoutMs);
     const v = out?.trim().split('\n')[0]?.trim() ?? '';
     if (SEMVER.test(v)) return v;
   }
