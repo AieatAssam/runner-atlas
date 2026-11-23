@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Runner Atlas</title>
+    <meta name="description" content="An hourly survey of hardware, region, speed and start delay on GitHub’s hosted runners.">
+    <script>
+      try { var saved = localStorage.getItem('atlas-theme'); if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved; } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="./src/styles/tokens.css">
+    <link rel="stylesheet" href="./src/styles/base.css">
+    <link rel="stylesheet" href="./src/styles/shell.css">
+  </head>
+  <body>
+    <header class="title-strip">
+      <div class="container title-strip__row">
+        <a class="wordmark" href="#top"><span class="emblem" aria-hidden="true"></span>Runner Atlas</a>
+        <nav class="nav" aria-label="Sections">
+          <a href="#survey">Survey</a>
+          <a href="#field-log">Field log</a>
+          <a href="#methods">Methods</a>
+          <!--repo-->
+        </nav>
+        <button type="button" class="theme-switch" id="theme-switch">Dark theme</button>
+      </div>
+      <div class="container">
+        <p class="synthetic-banner" id="synthetic-banner" hidden>Synthetic sample data, not measurements.</p>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="container grid-12">
+          <div class="hero__main">
+            <h1 id="hero-title">Where GitHub’s hosted runners actually run</h1>
+            <p class="hero__sentence">An hourly survey of hardware, region, speed and start delay.</p>
+            <div class="answer">
+              <p id="answer-lead">Awaiting first sweep. Sweeps run hourly at 17 minutes past the hour, UTC.</p>
+              <p id="answer-worst" hidden></p>
+              <p id="answer-confidence" hidden>Confidence: insufficient, 0 days of sweeps.</p>
+            </div>
+            <div class="hero__actions">
+              <a class="button" href="#survey">Browse the survey</a>
+              <a href="#methods">Methods and caveats</a>
+            </div>
+          </div>
+          <div class="hero__aside">
+            <div class="title-block">
+              <span class="plate-map plate-graticule" aria-hidden="true"></span>
+              <dl class="title-block__dl">
+                <dt>Survey day</dt><dd id="td-survey-day">0</dd>
+                <dt>Samples</dt><dd id="td-samples">0</dd>
+                <dt>Range</dt><dd id="td-range">No samples yet</dd>
+                <dt>Last sweep</dt><dd id="td-sweep">Not yet</dd>
+              </dl>
+            </div>
+            <section class="panel" data-panel="region-map" data-state="charting" aria-labelledby="t-region-map">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+              <h2 class="panel__title" id="t-region-map">Region map</h2>
+              <p class="panel__question">Where each region is and how many samples it contributed.</p>
+              <div class="panel-body" data-tier="day1"><!--locked--></div>
+              <p class="panel__caption"></p>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="sheets-wrap" id="survey" aria-label="Survey sheets">
+        <section class="standby-wrap" id="standby" aria-labelledby="standby-title">
+          <div class="container">
+            <div class="standby">
+              <span class="plate-map plate-contours" aria-hidden="true"></span>
+              <div class="standby__text">
+                <h2 id="standby-title">Awaiting first sweep</h2>
+                <p>Sweeps run hourly at 17 minutes past the hour, UTC. The survey sheets open when the first samples arrive.</p>
+                <p hidden>Next sweep at <time id="next-sweep"></time>.</p>
+                <p><a href="#methods">Read how the survey measures runners</a></p>
+              </div>
+              <figure class="standby__figure">
+                <div class="survey-plate" role="img" aria-label="Survey sheet with a graticule and a triangulation network joining the regions the survey can place."></div>
+                <figcaption>A map of the regions the survey can place.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        <div class="container" id="sheets" hidden>
+          <section class="sheet" id="sheet-fleet" aria-labelledby="sheet-fleet-title">
+            <div class="sheet__head">
+              <div>
+                <h2 class="sheet__title" id="sheet-fleet-title"><span class="glyph glyph--fleet" aria-hidden="true"></span>Fleet</h2>
+                <p class="sheet__question">Which runners exist, where they sit, and how fast they start.</p>
+              </div>
+            </div>
+            <div class="panels">
+              <section class="panel panel--wide" data-panel="fleet-sankey" data-state="charting" aria-labelledby="t-fleet-sankey">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-fleet-sankey">Fleet mix</h3>
+                <p class="panel__question">Which labels, CPU families and regions make up the fleet.</p>
+                <div class="panel-body" data-tier="day1"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--half" data-panel="fleet-table" data-state="charting" aria-labelledby="t-fleet-table">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-fleet-table">Fleet by label</h3>
+                <p class="panel__question">How many samples each label and region produced.</p>
+                <div class="panel-body" data-tier="day1"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--half" data-panel="recent-samples" data-state="charting" aria-labelledby="t-recent-samples">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-recent-samples">Recent samples</h3>
+                <p class="panel__question">The latest measured runs, newest first.</p>
+                <div class="panel-body" data-tier="day1"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--wide" data-panel="globe" data-state="charting" aria-labelledby="t-globe">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-globe">Globe preview</h3>
+                <p class="panel__question">Where the sampled regions sit on the planet.</p>
+                <div class="panel-body" data-tier="day1"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+            </div>
+          </section>
+
+          <section class="sheet" id="sheet-benchmarks" aria-labelledby="sheet-benchmarks-title">
+            <div class="sheet__head">
+              <div>
+                <h2 class="sheet__title" id="sheet-benchmarks-title"><span class="glyph glyph--benchmarks" aria-hidden="true"></span>Benchmarks</h2>
+                <p class="sheet__question">How fast each runner label computes, reads and writes.</p>
+              </div>
+            </div>
+            <div class="panels">
+              <section class="panel panel--half" data-panel="ridgelines" data-state="charting" aria-labelledby="t-ridgelines">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-ridgelines">Speed by label</h3>
+                <p class="panel__question">How each label spreads across each benchmark.</p>
+                <div class="panel-body" data-tier="day3"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--half" data-panel="beeswarm" data-state="charting" aria-labelledby="t-beeswarm">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-beeswarm">Runs by label</h3>
+                <p class="panel__question">Every run as a dot, placed by its score.</p>
+                <div class="panel-body" data-tier="day3"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--wide" data-panel="pointcloud" data-state="charting" aria-labelledby="t-pointcloud">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-pointcloud">Runs in three dimensions</h3>
+                <p class="panel__question">Memory, disk and CPU for each run, rotatable.</p>
+                <div class="panel-body" data-tier="day3"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+            </div>
+          </section>
+
+          <section class="sheet" id="sheet-drift" aria-labelledby="sheet-drift-title">
+            <div class="sheet__head">
+              <div>
+                <h2 class="sheet__title" id="sheet-drift-title"><span class="glyph glyph--drift" aria-hidden="true"></span>Drift</h2>
+                <p class="sheet__question">How start delay changes by hour and weekday.</p>
+              </div>
+            </div>
+            <div class="panels">
+              <section class="panel panel--wide" data-panel="drift-heatmap" data-state="charting" aria-labelledby="t-drift-heatmap">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-drift-heatmap">Start delay by slot</h3>
+                <p class="panel__question">Median total delay for each hour and weekday.</p>
+                <div class="panel-body" data-tier="day7"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--half" data-panel="terrain" data-state="charting" aria-labelledby="t-terrain">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-terrain">Delay terrain</h3>
+                <p class="panel__question">How delay rises and falls across the week.</p>
+                <div class="panel-body" data-tier="day7"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--half" data-panel="slot-ranking" data-state="charting" aria-labelledby="t-slot-ranking">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-slot-ranking">Best and worst slots</h3>
+                <p class="panel__question">The quickest and slowest scheduling slots, with intervals.</p>
+                <div class="panel-body" data-tier="day7"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+            </div>
+          </section>
+
+          <section class="sheet" id="sheet-neighbours" aria-labelledby="sheet-neighbours-title">
+            <div class="sheet__head">
+              <div>
+                <h2 class="sheet__title" id="sheet-neighbours-title"><span class="glyph glyph--neighbours" aria-hidden="true"></span>Neighbours</h2>
+                <p class="sheet__question">Whether busy neighbours on the same host slow the runner down.</p>
+              </div>
+            </div>
+            <div class="panels">
+              <section class="panel panel--half" data-panel="neighbours-scatter" data-state="charting" aria-labelledby="t-neighbours-scatter">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-neighbours-scatter">Steal against score</h3>
+                <p class="panel__question">Whether CPU steal on Linux runners predicts slower scores.</p>
+                <div class="panel-body" data-tier="day14"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--half" data-panel="neighbours-multiples" data-state="charting" aria-labelledby="t-neighbours-multiples">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-neighbours-multiples">Steal by label and family</h3>
+                <p class="panel__question">The same steal relationship, split by label and CPU family.</p>
+                <div class="panel-body" data-tier="day14"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+            </div>
+          </section>
+
+          <section class="sheet" id="sheet-rollouts" aria-labelledby="sheet-rollouts-title">
+            <div class="sheet__head">
+              <div>
+                <h2 class="sheet__title" id="sheet-rollouts-title"><span class="glyph glyph--rollouts" aria-hidden="true"></span>Rollouts</h2>
+                <p class="sheet__question">How the runner mix and speed changed over time.</p>
+              </div>
+            </div>
+            <div class="panels">
+              <section class="panel panel--wide" data-panel="rollout-timeline" data-state="charting" aria-labelledby="t-rollout-timeline">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-rollout-timeline">Label share over time</h3>
+                <p class="panel__question">How the runner mix moved day by day, with change points marked.</p>
+                <div class="panel-body" data-tier="day30"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--wide" data-panel="changepoints" data-state="charting" aria-labelledby="t-changepoints">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-changepoints">Change points</h3>
+                <p class="panel__question">Days where speed or mix shifted, and the evidence.</p>
+                <div class="panel-body" data-tier="day30"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+            </div>
+          </section>
+
+          <section class="sheet" id="sheet-seasonality" aria-labelledby="sheet-seasonality-title">
+            <div class="sheet__head">
+              <div>
+                <h2 class="sheet__title" id="sheet-seasonality-title"><span class="glyph glyph--seasonality" aria-hidden="true"></span>Seasonality</h2>
+                <p class="sheet__question">Whether speed follows a weekly or daily cycle.</p>
+              </div>
+            </div>
+            <div class="panels">
+              <section class="panel panel--half" data-panel="seasonality-bands" data-state="charting" aria-labelledby="t-seasonality-bands">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-seasonality-bands">Speed bands across the cycle</h3>
+                <p class="panel__question">The typical range of speed at each point in the week.</p>
+                <div class="panel-body" data-tier="day90"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+              <section class="panel panel--half" data-panel="seasonality-effects" data-state="charting" aria-labelledby="t-seasonality-effects">
+                <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
+                <h3 class="panel__title" id="t-seasonality-effects">Weekday and hour effects</h3>
+                <p class="panel__question">How far each weekday and hour sits from the average.</p>
+                <div class="panel-body" data-tier="day90"><!--locked--></div>
+                <p class="panel__caption"></p>
+              </section>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="field-log" id="field-log" aria-labelledby="field-log-title">
+        <div class="container">
+          <h2 id="field-log-title">Field log</h2>
+          <ol class="field-log__list" id="field-log-list">
+            <li>No entries yet.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="methods" id="methods" aria-labelledby="methods-title">
+        <div class="container">
+          <h2 id="methods-title">Methods and caveats</h2>
+          <h3>What is measured</h3>
+          <p>Each sample is one run of a fixed benchmark set on a GitHub-hosted runner, with its label, CPU family, operating system, region and timing fields. Units are stated beside each figure.</p>
+          <h3>What cannot be known</h3>
+          <p>Noisy neighbours on macOS and Windows, virtualised CPU topology, hypervisor preemption and page-cache effects all shift results and are not separated out. Network figures measure transfers to GitHub only. The network throughput index is a 1 MiB short transfer, so it is bounded by slow start and round-trip time rather than link bandwidth.</p>
+          <h3>Where region comes from</h3>
+          <p>Region comes from instance metadata where available, otherwise from a curated address-range table matched against the runner’s egress address, which is held in memory for the match and then dropped. GitHub’s published address ranges confirm the runner belongs to the Actions pool but carry no region. Stored records never contain IP addresses.</p>
+          <h3>Sampling bias</h3>
+          <p>Every sweep starts at 17 minutes past the hour, so other minutes go unobserved. Scheduled runs that were dropped are invisible except as missed slots.</p>
+          <h3>Why steal is only a proxy</h3>
+          <p>CPU steal shows time a virtual CPU waited for the host. It correlates with slow runs but does not measure the neighbour directly.</p>
+          <h3>Statistics</h3>
+          <p>The run is the unit of analysis. Intervals come from a cluster bootstrap over runs with 1000 resamples. Confidence tiers depend on the number of survey days, the sample count and whether the best and worst slots are separated. Change points use a penalised search over daily medians. A slot’s wait score is its median start delay plus half the gap between that median and the 90th percentile, so a slot with rare long waits ranks lower.</p>
+          <h3>Privacy</h3>
+          <p>The collector records hardware, operating system, region and timing only. It keeps no user data, repository names or workflow content.</p>
+          <h3>Data downloads</h3>
+          <p>The rollup files are plain JSON: <a href="data/rollups/manifest.json">manifest</a>, and one file per sheet under <code>data/rollups/</code> in the repository.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="colophon">
+      <div class="container">
+        <ul>
+          <li><a href="data/rollups/manifest.json">Manifest (JSON)</a></li>
+          <li><a href="data/rollups/fleet.json">Fleet rollup (JSON)</a></li>
+          <li><a href="data/rollups/drift.json">Drift rollup (JSON)</a></li>
+          <!--repo-link-->
+        </ul>
+        <p>Licensed under Apache-2.0. Built <time id="build-time">not yet</time>.</p>
+      </div>
+    </footer>
+
+    <div id="announcer" class="sr-only" aria-live="polite"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,105 @@
+/* Hallmark · v2.0.0 · theme: custom · idea: "a survey sheet that redraws itself every hour from the fleet it measures" · vibe: "survey cartography, field instruments, slate and verdigris" · shape: app screen · genre: modern-minimal · posture: full-palette (six data series, verdigris accent) · axes: light/slab-serif/chromatic-teal · modes: light+dark · faces: Hepta Slab, Public Sans, IBM Plex Mono · hero: answer beside the title block and map sheet · nav: title strip, wordmark, three links, theme switch · footer: colophon with data links · signature: the best and worst slot answer beside the live region map · states: loading, charting, error, full · job: read the answer · data: live */
+/* Hallmark · pre-emit critique: P4 H4 E4 S3 R4 V4 · weakest: S, plain Public Sans panel heads kept (no slab on panel titles); fix taken: slab reserved for headline and sheet titles, panel titles one weight lower */
+
+/* Light: Survey paper. Dark: Observatory slate. Same hues; lightness and chroma re-derived. */
+:root {
+  color-scheme: light;
+  --color-paper: oklch(95.5% 0.012 88);
+  --color-paper-2: oklch(93% 0.014 88);
+  --color-paper-3: oklch(90% 0.016 86);
+  --color-ink: oklch(27% 0.03 245);
+  --color-ink-2: oklch(37% 0.03 245);
+  --color-muted: oklch(49% 0.025 240);
+  --color-rule: oklch(83% 0.014 85);
+  --color-accent: oklch(47% 0.085 178);
+  --color-accent-ink: oklch(97.5% 0.008 88);
+  --color-focus: oklch(48% 0.16 258);
+  --color-warn: oklch(50% 0.13 45);
+
+  --chart-1: #0c60a3;
+  --chart-2: #ad7300;
+  --chart-3: #0c7b60;
+  --chart-4: #b64e10;
+  --chart-5: #a0557b;
+  --chart-6: #545f68;
+  --seq-1: #d2eef0; --seq-2: #a8d8dd; --seq-3: #7cbdcd; --seq-4: #509dbe;
+  --seq-5: #297cae; --seq-6: #125a98; --seq-7: #173c70;
+  --div-low: #1666aa; --div-mid: #ebe8df; --div-high: #b64e10;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: oklch(19% 0.016 245);
+  --color-paper-2: oklch(22% 0.017 245);
+  --color-paper-3: oklch(25% 0.018 245);
+  --color-ink: oklch(94% 0.015 88);
+  --color-ink-2: oklch(84% 0.015 88);
+  --color-muted: oklch(72% 0.018 240);
+  --color-rule: oklch(34% 0.02 245);
+  --color-accent: oklch(74% 0.08 178);
+  --color-accent-ink: oklch(19% 0.016 245);
+  --color-focus: oklch(76% 0.11 250);
+  --color-warn: oklch(76% 0.12 45);
+
+  --chart-1: #6da9e7; --chart-2: #e6b55d; --chart-3: #70c1a5;
+  --chart-4: #e99169; --chart-5: #d793b3; --chart-6: #8e9aa4;
+  --seq-1: #192a3c; --seq-2: #1f405b; --seq-3: #1e5c7b; --seq-4: #247d97;
+  --seq-5: #409ead; --seq-6: #6fc1c5; --seq-7: #a6e1e0;
+  --div-low: #6da9e7; --div-mid: #1a232a; --div-high: #e99169;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-paper: oklch(19% 0.016 245);
+    --color-paper-2: oklch(22% 0.017 245);
+    --color-paper-3: oklch(25% 0.018 245);
+    --color-ink: oklch(94% 0.015 88);
+    --color-ink-2: oklch(84% 0.015 88);
+    --color-muted: oklch(72% 0.018 240);
+    --color-rule: oklch(34% 0.02 245);
+    --color-accent: oklch(74% 0.08 178);
+    --color-accent-ink: oklch(19% 0.016 245);
+    --color-focus: oklch(76% 0.11 250);
+    --color-warn: oklch(76% 0.12 45);
+
+    --chart-1: #6da9e7; --chart-2: #e6b55d; --chart-3: #70c1a5;
+    --chart-4: #e99169; --chart-5: #d793b3; --chart-6: #8e9aa4;
+    --seq-1: #192a3c; --seq-2: #1f405b; --seq-3: #1e5c7b; --seq-4: #247d97;
+    --seq-5: #409ead; --seq-6: #6fc1c5; --seq-7: #a6e1e0;
+    --div-low: #6da9e7; --div-mid: #1a232a; --div-high: #e99169;
+  }
+}
+
+:root {
+  --font-display: "Hepta Slab Variable", "Hepta Slab", ui-serif, "Rockwell", serif;
+  --font-body: "Public Sans Variable", "Public Sans", ui-sans-serif, "Segoe UI", sans-serif;
+  --font-figure: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --text-0: 0.833rem;
+  --text-1: 1rem;
+  --text-2: 1.2rem;
+  --text-3: 1.44rem;
+  --text-4: 1.728rem;
+  --text-5: 2.074rem;
+  --text-6: 2.488rem;
+  --text-7: 2.986rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+  --space-9: 120px;
+
+  --dur-micro: 90ms;
+  --dur-short: 160ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --radius-control: 4px;
+  --container: 1280px;
+  --gutter: clamp(16px, 4vw, 48px);
+}
