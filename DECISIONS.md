@@ -159,3 +159,9 @@ Decision:
 - Dev dependencies. `happy-dom` (MIT) backs the chart unit tests, and `@axe-core/playwright` (MPL-2.0, test-time only) backs the accessibility e2e tests. Both are listed in `THIRD_PARTY_LICENSES.md`.
 
 Consequences: sloplint stays clean on static, and on render for Day-0 and Day-90, with one answered F25. The hero and finish reviews left some findings unresolved or dismissed, with reasons in `audit/hallmark-audit.md`. They challenge the locked composition (the boxed-panel rhythm, the paired ridgeline and beeswarm, a caption with n and range on every chart) and are left to a later design decision, not to M11.
+
+## D-025 Public GitHub repository creation, Pages, Actions, and branch ruleset (2026-11-23)
+
+Context: the repo owner granted explicit permission to use `gh` CLI to publish the public repository (`AieatAssam/runner-atlas`), configure GitHub Pages, set Actions and metadata policies, protect `main`, and verify the live workflow dispatch.
+Decision: create `AieatAssam/runner-atlas` as a public repo with description, topics, and homepage (`https://aieatassam.github.io/runner-atlas/`); enable GitHub Pages with `build_type: workflow` (GitHub Actions source); restrict Actions to GitHub-owned actions (`actions/*`) with default `read` workflow permissions (jobs request least-privilege overrides only where needed); enforce an active branch ruleset (`Protect main`) with `deletion` and `non_fast_forward` rules so history cannot be deleted or force-pushed while `github-actions[bot]` fast-forward `data: sweep` commits succeed cleanly without bypasses. Run an initial `workflow_dispatch` sweep across the matrix before setting `RUNNER_ATLAS_CRON_ENABLED=true`.
+Consequences: the repo is live on GitHub, protected against destructive history changes, and verified end-to-end against real GitHub-hosted runners before hourly commits start.
