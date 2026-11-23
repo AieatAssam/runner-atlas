@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import type { RawSample } from '../../shared/types/sample.ts';
-import { assembleSample, labelForHost, pickEnv, readMatrix } from '../../collector/src/collect.ts';
+import { assembleSample, benchEnvFor, labelForHost, pickEnv, readMatrix } from '../../collector/src/collect.ts';
 import { Deadline, MIN_STEP_MS, netStep } from '../../collector/src/benchmarks.ts';
 import {
   blockDeviceOf, flagsFromSysctl, linuxDiskKind, normalizeFlags, parseCpuinfo, parseDiskutil, parseLscpu, parseOsRelease,
@@ -250,6 +250,29 @@ describe('network probe', () => {
     };
     const fallback = await netStep({ budgetMs: 4000, env, fetchFn: gz });
     expect(fallback.netProbe).toBe('meta');
+  });
+
+  it('benchEnvFor strips GITHUB_REPOSITORY and GITHUB_SHA only for local runs', () => {
+    const env = { GITHUB_REPOSITORY: 'o/r', GITHUB_SHA: 'abc', GITHUB_TOKEN: 'tok' };
+    const local = benchEnvFor(env, true);
+    expect(local.GITHUB_REPOSITORY).toBeUndefined();
+    expect(local.GITHUB_SHA).toBeUndefined();
+    expect(local.GITHUB_TOKEN).toBe('tok');
+    const live = benchEnvFor(env, false);
+    expect(live).toEqual(env);
+    expect(live).toBe(env);
+  });
+
+  it('local netStep takes the meta probe even when GITHUB_REPOSITORY and GITHUB_SHA are set', async () => {
+    const urls: string[] = [];
+    const fake: FetchFn = async (url) => {
+      urls.push(String(url));
+      if (String(url).includes('/meta')) return new Response('x'.repeat(1000), { status: 200 });
+      return new Response('zen', { status: 200 });
+    };
+    const net = await netStep({ budgetMs: 4000, env: benchEnvFor({ GITHUB_REPOSITORY: 'o/r', GITHUB_SHA: 'abc' }, true), fetchFn: fake });
+    expect(net.netProbe).toBe('meta');
+    expect(urls.some((u) => u.includes('raw.githubusercontent.com'))).toBe(false);
   });
 });
 

@@ -34,6 +34,11 @@ export function pickEnv(env: NodeJS.ProcessEnv): Pick<RawSample['env'], 'imageOS
   };
 }
 
+// Local smoke runs always exercise the meta fallback even inside GitHub Actions CI (SPEC 3.6, 8).
+export function benchEnvFor(env: NodeJS.ProcessEnv, local: boolean): NodeJS.ProcessEnv {
+  return local ? { ...env, GITHUB_REPOSITORY: undefined, GITHUB_SHA: undefined } : env;
+}
+
 // Fits free-text fields to the schema's maxLength: env values that do not fit become null, other text is cut.
 export function assembleSample(parts: Omit<RawSample, 'v'>): RawSample {
   const cut = (s: string, max: number) => s.slice(0, max);
@@ -160,7 +165,7 @@ export async function collect(opts: {
   const agentVersion = await readAgentVersion({ home: homedir(), runnerTemp: env.RUNNER_TEMP, platform: platform() });
 
   const before = readProcStat();
-  const bench = await runBenchmarks({ env, tmpDir: tmpdir() });
+  const bench = await runBenchmarks({ env: benchEnvFor(env, local), tmpDir: tmpdir() });
   const after = readProcStat();
 
   return assembleSample({
