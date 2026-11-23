@@ -124,6 +124,7 @@ interface RunCtx {
   drift: number;
   peak: number;
   rolloutShare: number;
+  images: readonly [string, string];
 }
 
 function sampleOf(cfg: Config, rep: number, run: RunCtx): RawSample {
@@ -178,7 +179,7 @@ function sampleOf(cfg: Config, rep: number, run: RunCtx): RawSample {
     },
     env: {
       imageOS: cfg.imageOS,
-      imageVersion: v2 ? '20261015.2' : '20260901.1',
+      imageVersion: run.images[v2 ? 1 : 0],
       runnerOS: cfg.runnerOS,
       runnerArch: cfg.runnerArch,
       runnerEnvironment: 'github-hosted',
@@ -223,6 +224,9 @@ export function generate(opts: GenOpts): RawSample[] {
   const { days, seed, start } = opts;
   if (!Number.isInteger(days) || days < 0 || days > 365) throw new Error(`days must be an integer 0..365, got ${days}`);
   const out: RawSample[] = [];
+  // Image versions are named by date like GitHub's: the old one predates the survey, the new one lands as the rollout starts.
+  const stamp = (date: string) => date.replaceAll('-', '');
+  const images = [`${stamp(addDays(start, -14))}.1`, `${stamp(addDays(start, 20))}.2`] as const;
   for (let d = 0; d < days; d++) {
     const date = addDays(start, d);
     const rolloutShare = clamp((d - 20) / 35, 0, 1);
@@ -237,7 +241,7 @@ export function generate(opts: GenOpts): RawSample[] {
       const drift = Math.max(0, 0.8 + 1.4 * diurnal + (weekday < 5 ? 0.4 : -0.3) + 0.5 * ru());
       const run: RunCtx = {
         seed, slotIso, slotMs, runId, weekday, hour: h, drift,
-        peak: Math.exp(-((h - 15) ** 2) / 18), rolloutShare,
+        peak: Math.exp(-((h - 15) ** 2) / 18), rolloutShare, images,
       };
       for (const cfg of CONFIGS) {
         for (let rep = 1; rep <= cfg.replicas; rep++) out.push(sampleOf(cfg, rep, run));

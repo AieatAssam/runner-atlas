@@ -15,6 +15,15 @@ export function formatDuration(sec: number): string {
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
+// Reader-facing names for the change-point series; the site's chart labels use the same words.
+const SERIES_NAMES: Record<string, string> = {
+  singleCoreScore: 'Single core score',
+  multiCoreScore: 'Multi core score',
+  seqWriteMBs: 'Sequential write',
+  memBandwidthGBs: 'Memory bandwidth',
+  totalDelaySec: 'Total start delay',
+};
+
 export function buildFieldLog(
   ctx: Ctx,
   coverage: Coverage,
@@ -101,7 +110,7 @@ export function buildFieldLog(
       if (cp.date !== date) continue;
       const sign = cp.shiftPct >= 0 ? '+' : '-';
       sentences.push(
-        `${cp.metric} on ${cp.label} shifted ${sign}${Math.abs(cp.shiftPct).toFixed(1)}% from the previous segment.`,
+        `${SERIES_NAMES[cp.metric] ?? cp.metric} on ${cp.label} shifted ${sign}${Math.abs(cp.shiftPct).toFixed(1)}% from the previous segment.`,
       );
     }
 

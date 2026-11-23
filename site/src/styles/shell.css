@@ -72,8 +72,10 @@
 .hero__aside { grid-column: 8 / span 5; display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .hero__sentence { font-size: var(--text-2); color: var(--color-ink-2); max-width: 40ch; }
 .answer { display: flex; flex-direction: column; gap: var(--space-2); }
-.answer p { font-size: var(--text-1); }
-.answer__best { color: var(--color-ink); font-weight: 600; }
+/* The answer is the page's signature: the slot and its wait score read as figures, a step above body text. */
+.answer p { font-size: var(--text-1); color: var(--color-ink-2); }
+#answer-lead, #answer-worst { font-size: var(--text-2); max-width: 46ch; }
+.answer__value { font-weight: 600; color: var(--color-ink); white-space: nowrap; }
 .answer__figure { font-family: var(--font-figure); font-variant-numeric: tabular-nums; }
 .hero__actions { display: flex; align-items: center; gap: var(--space-5); flex-wrap: wrap; }
 .button {
@@ -112,7 +114,8 @@
   margin: 0;
 }
 .title-block dt { font-family: var(--font-body); font-size: var(--text-0); color: var(--color-muted); }
-.title-block dd { font-family: var(--font-figure); font-variant-numeric: tabular-nums; color: var(--color-ink); overflow-wrap: anywhere; }
+.title-block dd { font-family: var(--font-figure); font-variant-numeric: tabular-nums; color: var(--color-ink); overflow-wrap: break-word; }
+.title-block dd .nowrap { white-space: nowrap; }
 
 /* Sheets and panels */
 .sheet { padding-block: var(--space-7); border-top: 1px solid var(--color-ink); }
@@ -187,6 +190,12 @@
 .locked__bars { display: grid; gap: var(--space-2); }
 .locked__bars label { font-size: var(--text-0); color: var(--color-muted); }
 
+/* Phone, locked: the hero's region-map well would say "Charting in progress" again, right above the standby panel
+   that says it. The well is hidden there; the title block and the standby panel carry the state. */
+@media (max-width: 30rem) {
+  .hero__aside .panel:has(.locked) { display: none; }
+}
+
 /* Loading: reserved frame, no spinner, no animation */
 .panel[data-state="loading"] .panel-body { color: var(--color-muted); font-size: var(--text-0); }
 
@@ -207,7 +216,7 @@
 .field-log__date { font-family: var(--font-figure); font-variant-numeric: tabular-nums; color: var(--color-muted); }
 
 .methods { padding-block: var(--space-7); border-top: 1px solid var(--color-ink); }
-.methods h2 { margin-bottom: var(--space-5); }
+.methods h2 { margin-bottom: var(--space-5); display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .methods h3 { margin-top: var(--space-6); margin-bottom: var(--space-2); }
 .methods p + p { margin-top: var(--space-3); }
 
@@ -240,6 +249,7 @@
 .glyph--neighbours { --mark: url("../../assets/glyph-neighbours.svg"); }
 .glyph--rollouts { --mark: url("../../assets/glyph-rollouts.svg"); }
 .glyph--seasonality { --mark: url("../../assets/glyph-seasonality.svg"); }
+.glyph--methods { --mark: url("../../assets/glyph-methods.svg"); }
 
 /* Day 0 survey plate: alpha-only artwork painted at full opacity in ink-2 (DESIGN section 9). */
 .survey-plate {
@@ -251,6 +261,22 @@
 }
 .standby-wrap { border-top: 1px solid var(--color-ink); padding-block: var(--space-7); }
 .field-log__date { display: inline-block; min-width: 9ch; }
+/* The date plus a 68ch line of prose (DESIGN section 4). */
+.field-log__list { max-width: 80ch; }
+.field-log .nowrap { white-space: nowrap; }
+.field-log__older > summary {
+  display: inline-flex; align-items: center; min-height: 32px; cursor: pointer;
+  color: var(--color-muted); transition: color var(--dur-micro) var(--ease-out);
+}
+.field-log__older > summary:hover { color: var(--color-ink); text-decoration: underline; }
+.field-log__older > summary:active { color: var(--color-ink-2); }
+.field-log__older > summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.field-log__older > .field-log__list { margin-top: var(--space-3); }
+.field-log__older:not([open]) > .field-log__list { display: none; }
+.field-log__older[open] > summary { color: var(--color-ink-2); }
+
+/* On a phone the headline steps down one size so it sets in four lines, not five. */
+@media (max-width: 30rem) { h1 { font-size: var(--text-6); } }
 
 /* Below 60rem every grid is one column; spans would otherwise create implicit tracks. */
 @media (max-width: 60rem) {

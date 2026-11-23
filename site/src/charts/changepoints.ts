@@ -24,6 +24,6 @@ function render(ctx: RenderContext, data: RolloutsRollup): void {
 
 export default {
   panel: 'changepoints',
-  caption: (data: RolloutsRollup) => headCaption(data, `${data.method.test}, alpha ${data.method.alpha}, shifts of at least ${data.method.minShiftPct}%`),
+  caption: (data: RolloutsRollup) => headCaption(data, `Mann-Whitney U test, false discovery rate ${data.method.alpha * 100}%, shifts of at least ${data.method.minShiftPct}%`),
   render,
 } satisfies ChartModule<RolloutsRollup>;

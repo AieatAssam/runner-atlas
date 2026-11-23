@@ -3,7 +3,8 @@ import { contours } from 'd3-contour';
 import type { DriftCell, DriftRollup, SlotScore } from '../../../shared/types/rollups.ts';
 import { formatDuration, formatSlot } from '../lib/format.ts';
 import type { ChartTokens, RenderContext, SceneHandle, SceneModule } from '../types/views.ts';
-import { Stage, addTag, bindKeys, buildChrome, fitScale, gridStep, headCaption, placeTags, rampIndex, twoDToggle, zoomFactor, type Tag } from './_common.ts';
+import { el } from '../lib/dom.ts';
+import { Stage, addTag, bindKeys, buildChrome, fitScale, gridStep, headCaption, placeBeacons, rampIndex, twoDToggle, zoomFactor, type BeaconLabel } from './_common.ts';
 
 export const COLS = 24;
 export const ROWS = 7;
@@ -170,13 +171,20 @@ export default {
     // Beacons: thin vertical ink lines with DOM labels.
     const beaconList = beacons(data.ranking.best, data.ranking.worst, 3);
     const beaconVerts: number[] = [];
-    const tags: Tag[] = [];
+    const beaconTags: BeaconLabel[] = [];
     for (const b of beaconList) {
       const [x, z] = cellCentre(b.hourUtc, beaconRow(b.weekday));
       const foot = heightOf(values[beaconRow(b.weekday) * COLS + b.hourUtc] ?? null, min, max);
       beaconVerts.push(x, foot, z, x, MAX_HEIGHT + 0.3, z);
-      tags.push(addTag(chrome.stage, beaconLabel(b), new lib.Vector3(x, MAX_HEIGHT + 0.3, z)));
+      const tag = addTag(chrome.stage, beaconLabel(b), new lib.Vector3(x, MAX_HEIGHT + 0.3, z));
+      const marker = el('span', { class: 'scene__marker', 'aria-hidden': 'true' }, String(beaconTags.length + 1));
+      chrome.stage.append(marker);
+      beaconTags.push({ tag, marker, side: b.kind === 'best' ? 'left' : 'right' });
     }
+    // Narrow stages show a numbered marker at each anchor instead of a label; this numbered list gives the words.
+    const legend = el('ol', { class: 'scene__beacons', hidden: '' },
+      ...beaconList.map((b) => el('li', {}, beaconLabel(b))));
+    chrome.stage.after(legend);
     const beaconLines = new lib.LineSegments(
       new lib.BufferGeometry().setAttribute('position', new lib.Float32BufferAttribute(beaconVerts, 3)),
       inkMat,
@@ -205,7 +213,7 @@ export default {
       stage.camera.position.copy(base).multiplyScalar(zoom * fitScale(stage.camera.aspect));
       stage.camera.lookAt(0, 0.3, 0);
       stage.render();
-      placeTags(tags, stage.camera, stage.width, stage.height);
+      legend.hidden = placeBeacons(beaconTags, stage.camera, stage.width, stage.height);
     };
 
     // Cursor starts on the best slot when there is one, else the first cell.

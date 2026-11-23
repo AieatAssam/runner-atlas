@@ -76,7 +76,7 @@
                 <h2 id="standby-title">Awaiting first sweep</h2>
                 <p>Sweeps run hourly at 17 minutes past the hour, UTC. The survey sheets open when the first samples arrive.</p>
                 <p hidden>Next sweep at <time id="next-sweep"></time>.</p>
-                <p><a href="#methods">Read how the survey measures runners</a></p>
+                <p><a href="#methods">How runners are measured</a></p>
               </div>
               <figure class="standby__figure">
                 <div class="survey-plate" role="img" aria-label="Survey sheet with a graticule and a triangulation network joining the regions the survey can place."></div>
@@ -102,14 +102,14 @@
                 <div class="panel-body" data-tier="day1"><!--locked--></div>
                 <p class="panel__caption"></p>
               </section>
-              <section class="panel panel--half" data-panel="fleet-table" data-state="charting" aria-labelledby="t-fleet-table">
+              <section class="panel panel--wide" data-panel="fleet-table" data-state="charting" aria-labelledby="t-fleet-table">
                 <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
                 <h3 class="panel__title" id="t-fleet-table">Fleet by label</h3>
                 <p class="panel__question">How many samples each label and region produced.</p>
                 <div class="panel-body" data-tier="day1"><!--locked--></div>
                 <p class="panel__caption"></p>
               </section>
-              <section class="panel panel--half" data-panel="recent-samples" data-state="charting" aria-labelledby="t-recent-samples">
+              <section class="panel panel--wide" data-panel="recent-samples" data-state="charting" aria-labelledby="t-recent-samples">
                 <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
                 <h3 class="panel__title" id="t-recent-samples">Recent samples</h3>
                 <p class="panel__question">The latest measured runs, newest first.</p>
@@ -134,24 +134,24 @@
               </div>
             </div>
             <div class="panels">
-              <section class="panel panel--half" data-panel="ridgelines" data-state="charting" aria-labelledby="t-ridgelines">
+              <section class="panel panel--wide" data-panel="ridgelines" data-state="charting" aria-labelledby="t-ridgelines">
                 <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
                 <h3 class="panel__title" id="t-ridgelines">Speed by label</h3>
                 <p class="panel__question">How each label spreads across each benchmark.</p>
                 <div class="panel-body" data-tier="day3"><!--locked--></div>
                 <p class="panel__caption"></p>
               </section>
-              <section class="panel panel--half" data-panel="beeswarm" data-state="charting" aria-labelledby="t-beeswarm">
+              <section class="panel panel--wide" data-panel="beeswarm" data-state="charting" aria-labelledby="t-beeswarm">
                 <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
                 <h3 class="panel__title" id="t-beeswarm">Runs by label</h3>
-                <p class="panel__question">Every run as a dot, placed by its score.</p>
+                <p class="panel__question">Each sample as a dot, placed by its score.</p>
                 <div class="panel-body" data-tier="day3"><!--locked--></div>
                 <p class="panel__caption"></p>
               </section>
               <section class="panel panel--wide" data-panel="pointcloud" data-state="charting" aria-labelledby="t-pointcloud">
                 <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
-                <h3 class="panel__title" id="t-pointcloud">Runs in three dimensions</h3>
-                <p class="panel__question">Memory, disk and CPU for each run, rotatable.</p>
+                <h3 class="panel__title" id="t-pointcloud">Runs by speed, write and memory</h3>
+                <p class="panel__question">Each run as a point on single-core speed, sequential write and memory. The 3D view rotates; the 2D view sizes each dot by write speed.</p>
                 <div class="panel-body" data-tier="day3"><!--locked--></div>
                 <p class="panel__caption"></p>
               </section>
@@ -225,7 +225,7 @@
             <div class="panels">
               <section class="panel panel--wide" data-panel="rollout-timeline" data-state="charting" aria-labelledby="t-rollout-timeline">
                 <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
-                <h3 class="panel__title" id="t-rollout-timeline">Label share over time</h3>
+                <h3 class="panel__title" id="t-rollout-timeline">Runner image share over time</h3>
                 <p class="panel__question">How the runner mix moved day by day, with change points marked.</p>
                 <div class="panel-body" data-tier="day30"><!--locked--></div>
                 <p class="panel__caption"></p>
@@ -251,7 +251,7 @@
               <section class="panel panel--half" data-panel="seasonality-bands" data-state="charting" aria-labelledby="t-seasonality-bands">
                 <span class="tick tick--tr" aria-hidden="true"></span><span class="tick tick--bl" aria-hidden="true"></span>
                 <h3 class="panel__title" id="t-seasonality-bands">Speed bands across the cycle</h3>
-                <p class="panel__question">The typical range of speed at each point in the week.</p>
+                <p class="panel__question">The typical range of speed on each day of the survey.</p>
                 <div class="panel-body" data-tier="day90"><!--locked--></div>
                 <p class="panel__caption"></p>
               </section>
@@ -278,7 +278,7 @@
 
       <section class="methods" id="methods" aria-labelledby="methods-title">
         <div class="container">
-          <h2 id="methods-title">Methods and caveats</h2>
+          <h2 id="methods-title"><span class="glyph glyph--methods" aria-hidden="true"></span>Methods and caveats</h2>
           <h3>What is measured</h3>
           <p>Each sample is one run of a fixed benchmark set on a GitHub-hosted runner, with its label, CPU family, operating system, region and timing fields. Units are stated beside each figure.</p>
           <h3>What cannot be known</h3>
@@ -290,11 +290,11 @@
           <h3>Why steal is only a proxy</h3>
           <p>CPU steal shows time a virtual CPU waited for the host. It correlates with slow runs but does not measure the neighbour directly.</p>
           <h3>Statistics</h3>
-          <p>The run is the unit of analysis. Intervals come from a cluster bootstrap over runs with 1000 resamples. Confidence tiers depend on the number of survey days, the sample count and whether the best and worst slots are separated. Change points use a penalised search over daily medians. A slot’s wait score is its median start delay plus half the gap between that median and the 90th percentile, so a slot with rare long waits ranks lower.</p>
+          <p>The run is the unit of analysis. Intervals come from a cluster bootstrap over runs with 1000 resamples. Confidence tiers depend on the number of survey days, the sample count and whether the best and worst slots are separated. A slot’s wait score is its median start delay plus half the gap between that median and the 90th percentile, so a slot with rare long waits ranks worse. Change points split each label’s series at a day boundary where a Mann-Whitney U test finds the two sides differ, corrected for the number of splits tried (Bonferroni) and then across all series (Benjamini-Hochberg, 5% false discovery rate), and kept only when the median moved by at least 3%.</p>
           <h3>Privacy</h3>
           <p>The collector records hardware, operating system, region and timing only. It keeps no user data, repository names or workflow content.</p>
           <h3>Data downloads</h3>
-          <p>The rollup files are plain JSON: <a href="data/rollups/manifest.json">manifest</a>, and one file per sheet under <code>data/rollups/</code> in the repository.</p>
+          <p>The rollup files are plain JSON: <a href="data/rollups/manifest.json">manifest</a>, and one file per sheet under <code>data/rollups/</code>. The repository also holds every raw sample as JSON Lines under <code>data/raw/</code>, one file per UTC day, and the JSON Schemas under <code>schemas/</code>.</p>
         </div>
       </section>
     </main>

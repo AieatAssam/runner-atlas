@@ -317,7 +317,7 @@ One entry per UTC date with samples, the current date `partial: true`. Sentences
 3. Missed slots > 0: `"{m} of {e} hourly sweeps did not arrive."`, where `e` counts that date's expected slots inside the survey window (fewer than 24 on the first and the current date).
 4. A Linux label's daily p95 steal > 2% or > its trailing 14-day p90: `"Linux steal reached {x}% on {label}."`
 5. Image event that day: `"{label} moved to image {version}."`
-6. Change point dated that day: `"{metric} on {label} shifted {±p}% from the previous segment."`
+6. Change point dated that day: `"{metric} on {label} shifted {±p}% from the previous segment."`, where `{metric}` is the series' display name ("Single core score", "Total start delay"), never its key (D-024).
 
 Durations format as `41 s`, `3 min 10 s`. Copy never uses dashes, the word "unlock" or buzzwords (DESIGN.md copy rules).
 
@@ -367,7 +367,7 @@ Node 22+, TypeScript, Vite (`base: './'`, `build.manifest: true`), vanilla DOM (
 | `seasonality-effects` | weekday and diurnal effect bars with CIs, ACF stem plot |
 | `pointcloud-2d` | fallback: single x mem scatter, point size by write |
 
-One y-axis per chart; bars start at zero; a zoomed axis says so in its caption. Every chart has a visually hidden data table or `aria-label` summary.
+One y-axis per chart; bars start at zero; a zoomed axis says so in its caption. Every chart has an `aria-label` summary on its SVG and its data table in a closed "Data table" disclosure under the chart (D-024).
 
 ### 6.4 Methods and caveats (`#methods`, static HTML)
 
@@ -456,11 +456,11 @@ Bundle rule: the entry chunk and its static imports contain no `three` module (c
 | synthetic tiers | Vitest (`tests/integration`): generate days 0,1,3,7,14,30,90, aggregate, validate all rollups, assert tier statuses per section 5 | yes | yes | no |
 | schema | validate `data/rollups/*.json` | yes | yes | yes (before commit) |
 | workflow | `actionlint`; SHA-pin grep | optional | yes | no |
-| no colour literals in TS | grep `site/src/**/*.ts` for `#[0-9a-f]{3,8}\b|rgb\(|hsl\(|oklch\(` = 0 hits | yes | yes | no |
+| no colour literals in TS | grep `site/src/**/*.ts` for `#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|oklch\(` = 0 hits | yes | yes | no |
 | Hallmark | `node .claude/skills/hallmark/scripts/sloplint.mjs site/index.html site/src/styles --scope app --genre modern-minimal`; render tier with `--render --url http://localhost:5173/` against `vite dev` (built CSS loses the stamp comment) | yes | static tier | no |
 | bundle | build, inspect manifest: no `three` in entry graph, entry <= 90 KB gz | yes | yes | build only |
 | e2e (Playwright, Chromium) against `vite preview` of `.tmp/synthetic/day-90` and Day-0 builds | fold: hero headline, sentence, answer and primary action inside 1280 x 800; no horizontal scroll at 320, 375, 768, 1280, 1440, 1920; offline: every non-localhost request aborted and counted (must be 0); JS disabled: hero, title block and Methods present; reduced motion: no running CSS animations, globe not rotating; `--disable-webgl`: all 3 fallbacks render and are announced; keyboard: Tab reaches each scene, arrows announce; both themes: axe-core contrast clean | yes | yes | no |
 
 `npm run verify` runs every local row. Vitest never imports Playwright specs (`vitest.config.ts` excludes `tests/e2e`); `npm run e2e` runs Playwright. Vitest is a dev dependency only: collector jobs never run `npm ci` (D-014, D-018).
 
-Audit screenshots (M11): `node scripts/audit/screenshots.ts` builds `.tmp/synthetic/day-{0,1,3,7,14,30,90}`, serves each with `vite preview`, and writes `audit/screenshots/day-<d>-<width>-<theme>.png` at widths 375, 1280 and 1440 in light and dark, plus `day-90-1280-light-nowebgl.png`. Requests leaving localhost are aborted. Screenshots come from the synthetic presets only and show the synthetic notice. `audit/hallmark-audit.md` records the sloplint run (static and render tiers), every waiver, answer and dismissal, the hero and finish review outcomes, and the M7 asset review checklist (DESIGN section 9).
+Audit screenshots (M11): `node scripts/audit/screenshots.ts` builds `.tmp/synthetic/day-{0,1,3,7,14,30,90}`, serves each with `vite preview`, and writes `audit/screenshots/day-<d>-<width>-<theme>.png` at widths 375, 1280 and 1440 in light and dark, plus `day-90-1280-light-nowebgl.png`, the three 3D scene captures (`day-90-3d-terrain.png`, `day-90-3d-pointcloud.png`, `day-90-3d-globe.png`) and `day-90-methods.png`: 47 files. Requests leaving localhost are aborted. Screenshots come from the synthetic presets only and show the synthetic notice. `audit/hallmark-audit.md` records the sloplint run (static and render tiers), every waiver, answer and dismissal, the hero and finish review outcomes, and the M7 asset review checklist (DESIGN section 9).

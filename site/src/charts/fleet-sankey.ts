@@ -5,6 +5,23 @@ import type { ChartModule, RenderContext } from '../types/views.ts';
 import { chartWidth, chartWrap, count, emptyNote, headCaption, labelColor, summaryTable, svgEl, svgFor, svgText, tooltip } from './_axis.ts';
 
 const CHAR_W = 6.7;
+const LINE_H = 12;
+
+// Breaks a name after spaces, dots, hyphens and closing brackets, and before an opening bracket, into lines of at most maxChars. A single token longer than that is cut with an ellipsis.
+function wrapName(name: string, maxChars: number): string[] {
+  const tokens = name.match(/\(?[^ .()-]+[ .)-]*|[ .()-]+/g) ?? [name];
+  const lines: string[] = [];
+  let line = '';
+  for (const token of tokens) {
+    if (line && (line + token).trimEnd().length > maxChars) {
+      lines.push(line.trimEnd());
+      line = '';
+    }
+    line += token;
+  }
+  if (line.trim()) lines.push(line.trimEnd());
+  return lines.map((l) => (l.length > maxChars ? `${l.slice(0, Math.max(1, maxChars - 1))}…` : l));
+}
 
 interface Node { id: string; kind: string; name: string; x0?: number; x1?: number; y0?: number; y1?: number }
 interface Link { source: string | Node; target: string | Node; value: number; width?: number }
@@ -26,11 +43,14 @@ function render(ctx: RenderContext, data: FleetRollup): void {
     return;
   }
 
+  // Region names sit in a right margin sized to the longest one, so no name has to share a gap with another column's name.
+  const longestRegion = Math.max(0, ...data.sankey.nodes.filter((n) => n.kind === 'region').map((n) => n.name.length));
+  const marginRight = Math.ceil(longestRegion * CHAR_W) + 12;
   const graph = sankey<Node, Omit<Link, 'source' | 'target'>>()
     .nodeId((d) => d.id)
     .nodeWidth(12)
     .nodePadding(10)
-    .extent([[1, 1], [width - 1, height - 1]])({ nodes, links: links as never });
+    .extent([[1, 1], [width - marginRight, height - 1]])({ nodes, links: links as never });
 
   // Label flows wear their label's series. A CPU family fed by exactly one label passes that colour on to its
   // region flows; a family shared by labels cannot say which label reached which region, so those flows stay muted.
@@ -65,28 +85,40 @@ function render(ctx: RenderContext, data: FleetRollup): void {
 
   type Placed = Node & { x0: number; x1: number; y0: number; y1: number; value?: number };
   const placed = graph.nodes as unknown as Placed[];
-  // Region labels sit left of the last column; a CPU family label that would run into one is shortened (its full name is in the tooltip and table).
-  const regionLabels = placed.filter((n) => n.x0 >= width / 2).map((n) => ({ y: (n.y0 + n.y1) / 2, left: n.x0 - 6 - n.name.length * CHAR_W }));
   for (const n of placed) {
     const rect = svgEl('rect', { x: n.x0, y: n.y0, width: n.x1 - n.x0, height: Math.max(1, n.y1 - n.y0), fill: tokens.ink2 });
     svg.append(rect);
     tooltip(ctx, wrap, rect, `${n.name}: n = ${count(n.value ?? 0)} samples`);
   }
+
+  // Every name starts just past its node and runs into the gap before the next column. A name too long for that gap
+  // wraps onto lines; names in one column that still meet are pushed down. Nothing is cut short or drawn over another name.
+  const columnsX = [...new Set(placed.map((n) => n.x0))].sort((a, b) => a - b);
+  const byColumn = new Map<number, Array<{ n: Placed; lines: string[]; mid: number }>>();
   for (const n of placed) {
-    const right = n.x0 < width / 2;
-    const mid = (n.y0 + n.y1) / 2;
-    let name = n.name;
-    if (right && n.kind !== 'label') {
-      const limit = Math.min(width, ...regionLabels.filter((r) => Math.abs(r.y - mid) < 13).map((r) => r.left)) - n.x1 - 10;
-      const chars = Math.floor(limit / CHAR_W);
-      if (chars < name.length) name = `${name.slice(0, Math.max(3, chars - 1))}\u2026`;
+    const start = n.x1 + 6;
+    const next = columnsX.find((x) => x > n.x0 + 0.5);
+    const limit = next === undefined ? width - 2 : next - 6;
+    const lines = wrapName(n.name, Math.max(4, Math.floor((limit - start) / CHAR_W)));
+    const list = byColumn.get(n.x0) ?? [];
+    list.push({ n, lines, mid: (n.y0 + n.y1) / 2 });
+    byColumn.set(n.x0, list);
+  }
+  for (const column of byColumn.values()) {
+    column.sort((a, b) => a.mid - b.mid);
+    let floor = 2;
+    for (const item of column) {
+      const h = item.lines.length * LINE_H;
+      const top = Math.min(Math.max(item.mid - h / 2, floor), height - 2 - h);
+      floor = top + h + 2;
+      item.lines.forEach((text, i) => {
+        svgText(svg, item.n.x1 + 6, top + (i + 1) * LINE_H - 3, text, {
+          fill: tokens.ink,
+          class: 'chart__halo',
+          'aria-hidden': 'true',
+        });
+      });
     }
-    svgText(svg, right ? n.x1 + 6 : n.x0 - 6, mid + 4, name, {
-      'text-anchor': right ? 'start' : 'end',
-      fill: tokens.ink,
-      class: 'chart__halo',
-      'aria-hidden': 'true',
-    });
   }
 
   summaryTable(wrap, 'Fleet mix flows', ['From', 'To', 'Samples'],

@@ -7,16 +7,40 @@ import type { GeometryCollection, Topology } from 'topojson-specification';
 import landAtlas from 'world-atlas/land-110m.json' with { type: 'json' };
 import type { RegionsRollup } from '../../../shared/types/rollups.ts';
 import type { ChartModule, RenderContext } from '../types/views.ts';
+import { firstClear, leaderTo, type Box, type Placement } from '../lib/labels.ts';
 import { chartWidth, count, emptyNote, pct, summaryTable, svgEl, svgFor, svgText, chartWrap, tooltip, fixed } from './_axis.ts';
 
 const land = feature(landAtlas as unknown as Topology, (landAtlas as unknown as Topology & { objects: { land: GeometryCollection } }).objects.land);
 
 const CHAR_W = 6.7;
+const LABEL_H = 12;
 const MIN_SPAN_LON = 60;
-interface Box { x: number; y: number; w: number; h: number }
+const DISPLACED = [16, 28, 40];
 
-function overlaps(a: Box, b: Box): boolean {
-  return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+// Where a region name can go, nearest first: right, left, above, below the circle; then eight directions further out,
+// each with a short leader back to the circle. A spot that clears nothing is dropped by the caller.
+function spotsFor(x: number, y: number, r: number, w: number): Placement[] {
+  const h = LABEL_H;
+  const near: Box[] = [
+    { left: x + r + 3, top: y - h / 2, width: w, height: h },
+    { left: x - r - 3 - w, top: y - h / 2, width: w, height: h },
+    { left: x - w / 2, top: y - r - 3 - h, width: w, height: h },
+    { left: x - w / 2, top: y + r + 3, width: w, height: h },
+  ];
+  const spots: Placement[] = near.map((box) => ({ box, leader: null }));
+  for (const d of DISPLACED) {
+    for (let k = 0; k < 8; k++) {
+      const angle = (k * Math.PI) / 4;
+      const dx = Math.cos(angle);
+      const dy = Math.sin(angle);
+      // The box's near edge, not its centre, sits r + d out, so a wide name never lies back over its own circle.
+      const cx = x + dx * (r + d + w / 2);
+      const cy = y + dy * (r + d + h / 2);
+      const box = { left: cx - w / 2, top: cy - h / 2, width: w, height: h };
+      spots.push({ box, leader: leaderTo({ x, y }, box) });
+    }
+  }
+  return spots;
 }
 
 // The sampled regions with a margin, at least 60 degrees wide and 2:1, or null for the whole world
@@ -71,30 +95,37 @@ function render(ctx: RenderContext, data: RegionsRollup): void {
   const max = Math.max(0, ...data.regions.map((r) => r.samples));
   const radius = scaleSqrt().domain([0, max || 1]).range([3, Math.max(8, Math.min(20, width / 30))]);
   const sorted = [...data.regions].sort((a, b) => b.samples - a.samples);
-  const placed: Box[] = [];
-  const labels = svgEl('g');
-  for (const region of sorted) {
+  const marks = sorted.flatMap((region) => {
     const point = projection([region.lon, region.lat]);
-    if (!point) continue;
-    const [x, y] = point;
-    const r = radius(region.samples);
-    const circle = svgEl('circle', { cx: x, cy: y, r, fill: ctx.tokens.accent, 'fill-opacity': 0.55, stroke: ctx.tokens.paper, 'stroke-width': 1 });
-    svg.append(circle);
-    tooltip(ctx, wrap, circle, `${region.region}: n = ${count(region.samples)} samples, ${pct(region.share)} of the survey`);
-    // Largest regions are labelled first; a label that would collide tries the other side, then gives way (the table and tooltip keep it).
-    const w = region.region.length * CHAR_W;
-    const spots: Box[] = [
-      { x: x + r + 3, y: y - 7, w, h: 12 },
-      { x: x - r - 3 - w, y: y - 7, w, h: 12 },
-      { x: x - w / 2, y: y - r - 15, w, h: 12 },
-      { x: x - w / 2, y: y + r + 3, w, h: 12 },
-    ];
-    const spot = spots.find((b) => b.x >= 0 && b.x + b.w <= width && b.y >= 0 && b.y + b.h <= height && !placed.some((o) => overlaps(o, b)));
+    return point ? [{ region, x: point[0], y: point[1], r: radius(region.samples) }] : [];
+  });
+
+  // Leaders sit under the circles, circles under the labels. Every circle is an obstacle for every label, and a
+  // region's own circle is skipped (its label may start inside it).
+  const leaders = svgEl('g');
+  const circles = svgEl('g');
+  const labels = svgEl('g');
+  for (const m of marks) {
+    const circle = svgEl('circle', { cx: m.x, cy: m.y, r: m.r, fill: ctx.tokens.accent, 'fill-opacity': 0.55, stroke: ctx.tokens.paper, 'stroke-width': 1 });
+    circles.append(circle);
+    tooltip(ctx, wrap, circle, `${m.region.region}: n = ${count(m.region.samples)} samples, ${pct(m.region.share)} of the survey`);
+  }
+  const obstacles: Box[] = marks.map((m) => ({ left: m.x - m.r, top: m.y - m.r, width: 2 * m.r, height: 2 * m.r }));
+  const bounds = { width, height, pad: 2, gap: 2 };
+  const placed: Placement[] = [];
+  // Largest regions are placed first. A name with no clear spot is dropped; the table and tooltip still carry it.
+  for (const m of marks) {
+    const anchor = { x: m.x, y: m.y };
+    const candidates = spotsFor(m.x, m.y, m.r, m.region.region.length * CHAR_W);
+    const spot = firstClear(candidates, anchor, { ...bounds, strict: true }, placed, obstacles)
+      ?? firstClear(candidates, anchor, { ...bounds, strict: false }, placed, obstacles);
     if (!spot) continue;
     placed.push(spot);
-    svgText(labels, spot.x, spot.y + 10, region.region, { fill: ctx.tokens.ink, class: 'chart__halo', 'aria-hidden': 'true' });
+    const l = spot.leader;
+    if (l) leaders.append(svgEl('line', { x1: l.x1, y1: l.y1, x2: l.x2, y2: l.y2, stroke: ctx.tokens.ink2, 'stroke-width': 0.6 }));
+    svgText(labels, spot.box.left, spot.box.top + 10, m.region.region, { fill: ctx.tokens.ink, class: 'chart__halo', 'aria-hidden': 'true' });
   }
-  svg.append(labels);
+  svg.append(leaders, circles, labels);
 
   if (data.regions.length === 0) emptyNote(wrap, 'No region is placed yet. The map shows land only.');
   summaryTable(wrap, 'Samples by region', ['Region', 'Samples', 'Share', 'Placed by', 'Median time to first byte', 'Median start delay'],

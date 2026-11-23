@@ -34,8 +34,16 @@ function applyDataState(manifest: Manifest): void {
   synthetic?.toggleAttribute('hidden', manifest.dataSource !== 'synthetic');
 }
 
+// The sticky title strip wraps (nav, synthetic notice), so its live height drives scroll-padding-top in base.css.
+function trackStripHeight(): void {
+  const strip = document.querySelector<HTMLElement>('.title-strip');
+  if (!strip) return;
+  new ResizeObserver(() => document.documentElement.style.setProperty('--strip-h', `${Math.ceil(strip.offsetHeight)}px`)).observe(strip);
+}
+
 async function boot(): Promise<void> {
   initTheme();
+  trackStripHeight();
   initRouter();
 
   let manifest: Manifest;

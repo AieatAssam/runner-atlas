@@ -1,5 +1,7 @@
 /* Hallmark · v2.0.0 · theme: custom · idea: "a survey sheet that redraws itself every hour from the fleet it measures" · vibe: "survey cartography, field instruments, slate and verdigris" · shape: app screen · genre: modern-minimal · posture: full-palette (six data series, verdigris accent) · axes: light/slab-serif/chromatic-teal · modes: light+dark · faces: Hepta Slab, Public Sans, IBM Plex Mono · hero: answer beside the title block and map sheet · nav: title strip, wordmark, three links, theme switch · footer: colophon with data links · signature: the best and worst slot answer beside the live region map · states: loading, charting, error, full · job: read the answer · data: live */
 /* Hallmark · pre-emit critique: P4 H4 E4 S3 R4 V4 · weakest: S, plain Public Sans panel heads kept (no slab on panel titles); fix taken: slab reserved for headline and sheet titles, panel titles one weight lower */
+/* Hallmark · answered F25 · on a phone each ruled table keeps its first column, the runner label or date that names the row, pinned with position sticky while the other columns scroll inside a focusable table region */
+/* Hallmark · hero-review: fix · 5 findings · 2 resolved 1 partial 2 unresolved · finish-review: subagent · 8 findings · 2 resolved 2 partial 4 unresolved · gap: the body repeats one boxed panel, so below Drift it reads as a report more than a survey sheet */
 
 /* Light: Survey paper. Dark: Observatory slate. Same hues; lightness and chroma re-derived. */
 :root {

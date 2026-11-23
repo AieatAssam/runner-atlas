@@ -16,7 +16,10 @@
     "collect:local": "node collector/src/collect.ts --local --out .tmp/sample.json",
     "synthetic": "node scripts/synthetic/generate.ts",
     "audit:screenshots": "node scripts/audit/screenshots.ts",
-    "verify": "npm run typecheck && npm test && npm run build && npm run e2e"
+    "verify:collector": "npm run collect:local && node scripts/verify-sample.ts .tmp/sample.json",
+    "verify:rollups": "node scripts/verify-rollups.ts",
+    "verify:bundle": "node scripts/verify-bundle.ts",
+    "verify": "npm run typecheck && npm test && npm run build && npm run verify:rollups && npm run verify:bundle && npm run verify:collector && npm run e2e"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

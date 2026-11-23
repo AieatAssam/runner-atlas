@@ -1,6 +1,6 @@
 /* Hallmark · see tokens.css */
 
-/* One block of a chart: the SVG and its visually hidden table. */
+/* One block of a chart: the SVG and its data table disclosure. */
 .chart { position: relative; min-width: 0; }
 .chart + .chart,
 .chart + .table-wrap,
@@ -20,6 +20,8 @@
 /* The ring is an outline, so it shows on groups whose children set their own stroke. */
 .chart__mark:focus { outline: none; }
 .chart__mark:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+/* Thin marks (hairline rules, zero-height bars) cannot carry a visible ring alone, so the chart frame takes it too. */
+.chart:has(.chart__mark:focus-visible) > .chart__svg { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 /* A paper halo keeps labels legible where they cross marks. */
 .chart__halo { paint-order: stroke; stroke: var(--color-paper); stroke-width: 3px; stroke-linejoin: round; }
 /* The map clips its land to the frame when it zooms to the sampled regions. */
@@ -46,9 +48,36 @@
 
 .chart__empty { color: var(--color-muted); font-size: var(--text-0); }
 
+/* The data table under each chart: one quiet line while closed, a ruled table when opened. */
+.chart__data { margin-top: var(--space-2); }
+.chart__data > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--color-muted);
+  font-size: var(--text-0);
+  cursor: pointer;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+.chart__data > summary:hover { color: var(--color-ink); text-decoration: underline; }
+.chart__data > summary:active { color: var(--color-ink-2); }
+.chart__data > summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.chart__data[open] > summary { color: var(--color-ink-2); }
+.chart__data > .table-wrap { margin-top: var(--space-2); }
+/* Closed means gone from layout too, not only unpainted, so nothing measures or hit-tests the hidden rows. */
+.chart__data:not([open]) > .table-wrap { display: none; }
+
 /* Ruled tables: hairlines between rows, a stronger rule under the header. */
 .table-wrap { overflow-x: auto; min-width: 0; }
 .table-wrap:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+/* On a phone the first column names the row and stays in view while the table scrolls inside its region. */
+.table-wrap .ruled th:first-child,
+.table-wrap .ruled td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-paper);
+}
 .ruled {
   width: 100%;
   border-collapse: collapse;

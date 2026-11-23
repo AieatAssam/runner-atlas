@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
-  declutter, fitScale, gridStep, keyAction, rampIndex, sceneHeight, stepIndex, zoomFactor,
+  declutter, fitScale, gridStep, keyAction, rampIndex, sceneHeight, spreadMarkers, stepIndex, zoomFactor,
 } from '../../site/src/scenes/_common.ts';
+import { columnLayout, leaderHits, leadersCross, leadersMeet, overlaps } from '../../site/src/lib/labels.ts';
 import {
   COLS, ROWS, beacons, cellCentre, cellSentence, extent, heightOf, isolineSegments, quadPositions, surfaceValues,
 } from '../../site/src/scenes/terrain.ts';
@@ -15,26 +16,76 @@ import type { DriftCell, SlotScore, BenchmarksRollup, RegionsRollup } from '../.
 const SCENES = ['_common', 'terrain', 'pointcloud', 'globe'] as const;
 
 describe('shared scene helpers', () => {
-  it('declutters overlapping labels upward and keeps them on the stage', () => {
+  it('declutters overlapping labels and keeps them on the stage', () => {
     const a = { x: 100, y: 100, width: 80, height: 20 };
-    const [first, second, third] = declutter([a, { ...a, x: 110 }, { x: 400, y: 100, width: 80, height: 20 }], 420, 300);
+    const [first, second, third] = declutter([a, { ...a, x: 110 }, { x: 400, y: 100, width: 80, height: 20 }], 420, 300).map((p) => p.box);
     expect(first).toEqual({ left: 60, top: 78, width: 80, height: 20 });
-    expect(second!.top + second!.height).toBeLessThanOrEqual(first!.top);
+    expect(overlaps(first!, second!)).toBe(false);
+    expect(second!.left).toBeGreaterThanOrEqual(0);
     expect(third!.top).toBe(78);
     expect(third!.left + third!.width).toBeLessThanOrEqual(420);
   });
 
-  it('stacks labels below the anchor when there is no room above, and never leaves the stage', () => {
+  it('never leaves the stage and never overlaps, when many labels share one anchor', () => {
     const a = { x: 100, y: 30, width: 80, height: 20 };
-    const boxes = declutter([a, a, a, a], 200, 120);
+    const boxes = declutter([a, a, a, a], 200, 120).map((p) => p.box);
     for (const b of boxes) {
       expect(b.top).toBeGreaterThanOrEqual(0);
       expect(b.top + b.height).toBeLessThanOrEqual(120);
     }
-    const tops = boxes.map((b) => b.top).sort((x, y) => x - y);
-    for (let i = 1; i < tops.length; i++) expect(tops[i]! - tops[i - 1]!).toBeGreaterThanOrEqual(20);
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) expect(overlaps(boxes[i]!, boxes[j]!)).toBe(false);
     expect(fitScale(1.6)).toBe(1);
     expect(fitScale(0.8)).toBe(2);
+  });
+
+  it('lays six clustered beacons out in the margins: no overlaps, no meeting leaders, no leader through another label, all inside', () => {
+    // Three best beacons on the left, three worst on the right, each cluster a few pixels apart (the real failing geometry).
+    const clusterAt = (x0: number, y0: number) => [
+      { x: x0, y: y0 }, { x: x0 + 10, y: y0 + 6 }, { x: x0 + 22, y: y0 - 4 },
+      { x: x0 + 30, y: y0 + 10 }, { x: x0 + 42, y: y0 + 2 }, { x: x0 + 52, y: y0 + 12 },
+    ];
+    // The cluster sits at the stage centre, where the beacons of a real terrain land.
+    const pointsFor = (w: number, h: number) => clusterAt(w / 2 - 26, h * 0.3).map((p, i) => ({ ...p, width: 163, height: 20, side: i < 3 ? 'left' as const : 'right' as const }));
+    for (const [w, h] of [[375, 260], [1280, 560]] as const) {
+      const pts = pointsFor(w, h);
+      const placed = columnLayout(pts, { width: w, height: h, pad: 6, gap: 4 });
+      if (placed === null) continue;
+      expect(placed).toHaveLength(6);
+      for (const p of placed) {
+        expect(p.box.left).toBeGreaterThanOrEqual(0);
+        expect(p.box.top).toBeGreaterThanOrEqual(0);
+        expect(p.box.left + p.box.width).toBeLessThanOrEqual(w);
+        expect(p.box.top + p.box.height).toBeLessThanOrEqual(h);
+      }
+      for (let i = 0; i < placed.length; i++) for (let j = 0; j < placed.length; j++) {
+        if (j > i) {
+          expect(overlaps(placed[i]!.box, placed[j]!.box)).toBe(false);
+          if (placed[i]!.leader && placed[j]!.leader) expect(leadersMeet(placed[i]!.leader!, placed[j]!.leader!)).toBe(false);
+        }
+        if (i !== j && placed[i]!.leader) expect(leaderHits(placed[i]!.leader!, placed[j]!.box)).toBe(false);
+      }
+    }
+    // At 1280 the columns fit, so labels with leaders are shown. A phone-width stage (about 293 px wide here, the real
+    // stage inside the page padding) cannot hold two label columns, so the layout refuses and the markers take over.
+    expect(columnLayout(pointsFor(1280, 560), { width: 1280, height: 560, pad: 6, gap: 4 })).not.toBeNull();
+    expect(columnLayout(pointsFor(293, 260), { width: 293, height: 260, pad: 6, gap: 4 })).toBeNull();
+  });
+
+  it('spreads clustered fallback markers apart so no two touch, and keeps them on the stage', () => {
+    // Three anchors a few pixels apart (the terrain's worst-slot cluster) plus one pinned to the stage corner.
+    const anchors = [{ x: 330, y: 74 }, { x: 336, y: 76 }, { x: 333, y: 90 }, { x: 2, y: 2 }];
+    const size = { width: 15, height: 15 };
+    const spots = spreadMarkers(anchors, anchors.map(() => size), 530, 340);
+    expect(spots[0]).toEqual({ left: 322.5, top: 66.5 });
+    for (const s of spots) {
+      expect(s.left).toBeGreaterThanOrEqual(0);
+      expect(s.top).toBeGreaterThanOrEqual(0);
+      expect(s.left + 15).toBeLessThanOrEqual(530);
+      expect(s.top + 15).toBeLessThanOrEqual(340);
+    }
+    for (let i = 0; i < spots.length; i++) for (let j = i + 1; j < spots.length; j++) {
+      expect(overlaps({ ...spots[i]!, ...size }, { ...spots[j]!, ...size }, 3)).toBe(false);
+    }
   });
 
   it('maps keys to actions and ignores the rest', () => {

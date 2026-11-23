@@ -58,4 +58,21 @@ Direct dependencies are listed first. Transitive packages are included because V
 | `json-schema-traverse` | 1.0.0 | MIT | Copyright (c) 2017 Evgeny Poberezkin | no (ajv) |
 | `require-from-string` | 2.0.2 | MIT | Copyright (c) Vsevolod Strukchinsky | no (ajv) |
 
-Build, test and type packages (Vite, Vitest, Playwright, `@types/*`, TypeScript) are dev dependencies and are not shipped in the site or collector bundles.
+## Development dependencies (not shipped)
+
+These packages build and test the project. None of them is bundled into the site or the collector, and
+none is redistributed by this repository. They are listed for completeness, with `@types/*` packages (MIT)
+omitted.
+
+| Package | Version | Licence | Used for |
+| --- | --- | --- | --- |
+| `vite` | 8.3.8 | MIT | site build and preview |
+| `typescript` | 7.0.2 | Apache-2.0 | type checking |
+| `vitest` | 5.1.1 | MIT | unit and integration tests |
+| `happy-dom` | 21.0.4 | MIT | the DOM for chart unit tests (`tests/unit/charts.test.ts`) |
+| `@playwright/test`, `playwright` | 1.65.1 | Apache-2.0 | end-to-end tests and the screenshot gallery |
+| `@axe-core/playwright` | 4.14.0 | MPL-2.0 | accessibility checks in the end-to-end tests |
+| `axe-core` | 4.14.1 | MPL-2.0 | the rule engine behind `@axe-core/playwright` |
+
+The two MPL-2.0 packages are used unmodified from npm at test time only. Their source is available from
+npm and https://github.com/dequelabs/axe-core and https://github.com/dequelabs/axe-core-npm.

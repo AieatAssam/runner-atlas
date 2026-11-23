@@ -10,7 +10,8 @@ interface Row { label: string; tick: string | null; n: number; effect: number | 
 
 const EFFECT_H = 200;
 const ACF_H = 160;
-const PAD = { top: 16, right: 10, bottom: 26, left: 56 };
+// top leaves a title band: the top y tick sits at PAD.top and must clear the 11px title baseline at y = 11.
+const PAD = { top: 30, right: 10, bottom: 26, left: 56 };
 
 function show(v: number): string {
   return fixed(v, 1);

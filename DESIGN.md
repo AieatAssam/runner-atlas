@@ -141,7 +141,7 @@ Series assignment is fixed by label (above). Hardware families take `--chart-1..
 - Hero copy (fixed, real): headline "Where GitHub's hosted runners actually run"; sentence "An hourly survey of hardware, region, speed and start delay." Answer block examples: "Best observed slot: Tuesday 04:17 UTC, median wait 41 s (95% interval 32 to 55 s)." / "Worst: Monday 14:17 UTC, 3 min 10 s." / "Confidence: emerging, 9 days of sweeps." Day 0: "Awaiting first sweep. The next sweep starts at 15:17 UTC."
 - Structure: no cards and no card inside a card. A sheet is a full-width ink hairline, a sheet head (title, the one-sentence question, caption on the right), then panels. A panel is framed once by a 1px `--color-rule` **neatline** with corner graticule ticks (four 6px strokes, CSS borders on pseudo-elements); nothing inside a panel is framed again. Tables are ruled (hairlines between rows, no zebra beyond `paper-2` header row).
 - Radius: panels 0 (neatline), controls 4px. Shadows: none in either mode.
-- Title strip: wordmark left; links "Survey", "Field log", "Methods"; theme switch; repository link. One row, sticky with `top: 0`; nothing else is sticky.
+- Title strip: wordmark left; links "Survey", "Field log", "Methods"; theme switch; repository link. One row, sticky with `top: 0`. The only other sticky element is the first column of a ruled table, pinned at `left: 0` while the table scrolls inside its own focusable region (D-024).
 - Colophon: data links (raw JSONL, rollups, schemas), repository, licence, last build time.
 
 ### Locked panel ("Charting in progress")

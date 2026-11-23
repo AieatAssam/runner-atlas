@@ -182,9 +182,15 @@ export function ruledTable(ctx: RenderContext, caption: string, headers: string[
   wrap.append(buildTable('ruled', caption, headers, rows.length ? rows : [['No rows yet', ...headers.slice(1).map(() => '')]]));
 }
 
-// The visually hidden data table that every chart carries alongside its marks.
+// The data table every chart carries alongside its marks, in a closed "Data table" disclosure under the chart.
+// Closed, it adds one line; open, it is a ruled table that scrolls inside its own region on a phone.
+// The marks stay named while it is closed: the SVG carries an aria-label summary and every mark its own label.
 export function summaryTable(wrap: HTMLElement, caption: string, headers: string[], rows: string[][]): void {
-  wrap.append(buildTable('sr-only', caption, headers, rows));
+  const region = el('div', { class: 'table-wrap', role: 'region', 'aria-label': `${caption}, scrollable table`, tabindex: '0' },
+    buildTable('ruled', caption, headers, rows.length ? rows : [['No rows yet', ...headers.slice(1).map(() => '')]]));
+  wrap.append(el('details', { class: 'chart__data' },
+    el('summary', {}, 'Data table', el('span', { class: 'sr-only' }, `: ${caption}`)),
+    region));
 }
 
 export function emptyNote(wrap: HTMLElement, text: string): void {

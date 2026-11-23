@@ -96,6 +96,9 @@ export default {
 
     const globe = new lib.Group();
     stage.scene.add(globe);
+    // Start, and reset, facing the sample-weighted mean longitude, so the pylons stand face-on, not on the limb.
+    const homeYaw = yawToFace(total > 0 ? regions.reduce((s, r) => s + r.lon * r.samples, 0) / total : 0);
+    globe.rotation.y = homeYaw;
     // White lights summing to about 1 (three's Lambert divides by pi), so lit faces show the token colour.
     stage.scene.add(new lib.AmbientLight(undefined, Math.PI * 0.72));
     const sun = new lib.DirectionalLight(undefined, Math.PI * 0.3);
@@ -227,6 +230,7 @@ export default {
       } else if (action === 'reset') {
         distance = DEFAULT_DISTANCE;
         tilt = DEFAULT_TILT;
+        globe.rotation.y = homeYaw;
         say('View reset.');
       } else if (action === 'pause') {
         paused = !paused;
@@ -286,6 +290,7 @@ export default {
     resetBtn.addEventListener('click', () => {
       distance = DEFAULT_DISTANCE;
       tilt = DEFAULT_TILT;
+      globe.rotation.y = homeYaw;
       frame();
       say('View reset.');
     }, { signal: ac.signal });

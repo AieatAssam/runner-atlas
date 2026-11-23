@@ -2,6 +2,7 @@
 // uses it as a type, so it is safe to import from tests and from the shell.
 import type * as THREE from 'three';
 import { el } from '../lib/dom.ts';
+import { columnLayout, firstClear, leaderTo, type Bounds as LabelBounds, type Placement } from '../lib/labels.ts';
 import type { Head } from '../../../shared/types/rollups.ts';
 import type { Caption, ChartTokens } from '../types/views.ts';
 
@@ -205,34 +206,62 @@ export function buildChrome(root: HTMLElement, id: string, help: string): Chrome
   };
 }
 
-// Overlay labels: DOM text placed over the canvas at projected 3D anchors.
-export interface Tag { readonly el: HTMLElement; readonly at: THREE.Vector3 }
+// Overlay labels: DOM text placed over the canvas at projected 3D anchors, with a leader line back to the anchor.
+export interface Tag { readonly el: HTMLElement; readonly line: HTMLElement; readonly at: THREE.Vector3 }
 
 export function addTag(stage: HTMLElement, text: string, at: THREE.Vector3): Tag {
+  const line = el('span', { class: 'scene__leader', hidden: '' });
   const node = el('span', { class: 'scene__label' }, text);
-  stage.append(node);
-  return { el: node, at };
+  stage.append(line, node);
+  return { el: node, line, at };
 }
 
-export interface Box { left: number; top: number; width: number; height: number }
+export type { Box, Placement } from '../lib/labels.ts';
 
-// Greedy declutter: each label sits centred above its anchor; a label that would overlap one already placed moves
-// above it, and when that runs off the top it stacks below the anchor instead. Labels stay inside the stage.
-// Pure, so it is unit tested.
-export function declutter(anchors: ReadonlyArray<{ x: number; y: number; width: number; height: number }>, stageWidth: number, stageHeight: number, gap = 2): Box[] {
-  const placed: Box[] = [];
-  const hit = (left: number, top: number, w: number, h: number): Box | undefined =>
-    placed.find((b) => left < b.left + b.width && left + w > b.left && top < b.top + b.height + gap && top + h + gap > b.top);
-  for (const a of anchors) {
-    const left = Math.min(Math.max(0, stageWidth - a.width), Math.max(0, a.x - a.width / 2));
-    let top = a.y - a.height - gap;
-    for (let b = hit(left, top, a.width, a.height); b && top >= 0; b = hit(left, top, a.width, a.height)) top = b.top - a.height - gap;
-    if (top < 0) {
-      top = Math.max(0, a.y + gap);
-      for (let b = hit(left, top, a.width, a.height); b; b = hit(left, top, a.width, a.height)) top = b.top + b.height + gap;
+const LABEL_PAD = 6;
+const LABEL_STEP = 8;
+
+// Candidates for one label: centred on its anchor, then sideways in 8 px steps, first above the anchor in tiers
+// going up, then below in tiers going down, until a tier leaves the stage. A label beside the anchor takes a leader;
+// one that touches it does not.
+function* tierCandidates(a: { x: number; y: number; width: number; height: number }, bounds: LabelBounds): Generator<Placement> {
+  const { width, height, pad, gap } = bounds;
+  const maxLeft = width - pad - a.width;
+  const centred = Math.min(Math.max(pad, a.x - a.width / 2), Math.max(pad, maxLeft));
+  const lefts: number[] = [];
+  for (let k = 0; k <= 6; k++) {
+    for (const s of k === 0 ? [0] : [k * LABEL_STEP, -k * LABEL_STEP]) {
+      const left = centred + s;
+      if (left >= pad && left <= maxLeft) lefts.push(left);
     }
-    top = Math.min(Math.max(0, stageHeight - a.height), Math.max(0, top));
-    placed.push({ left, top, width: a.width, height: a.height });
+  }
+  const step = a.height + gap;
+  for (const dir of [-1, 1]) {
+    for (let t = 0; ; t++) {
+      const top = dir < 0 ? a.y - gap - a.height - t * step : a.y + gap + t * step;
+      if (top < pad || top + a.height > height - pad) break;
+      for (const left of lefts) {
+        const box = { left, top, width: a.width, height: a.height };
+        yield { box, leader: leaderTo(a, box) };
+      }
+    }
+  }
+}
+
+// Places every label in order. A label with no clear candidate is clamped above its anchor, so it stays on the stage.
+export function declutter(anchors: ReadonlyArray<{ x: number; y: number; width: number; height: number }>, stageWidth: number, stageHeight: number, gap = 2): Placement[] {
+  const bounds: LabelBounds = { width: stageWidth, height: stageHeight, pad: LABEL_PAD, gap };
+  const placed: Placement[] = [];
+  for (const a of anchors) {
+    const strict: LabelBounds = { ...bounds, strict: true };
+    const relaxed: LabelBounds = { ...bounds, strict: false };
+    const found = firstClear(tierCandidates(a, strict), a, strict, placed)
+      ?? firstClear(tierCandidates(a, relaxed), a, relaxed, placed);
+    if (found) { placed.push(found); continue; }
+    const left = Math.min(Math.max(LABEL_PAD, a.x - a.width / 2), Math.max(LABEL_PAD, stageWidth - LABEL_PAD - a.width));
+    const top = Math.min(Math.max(LABEL_PAD, a.y - gap - a.height), Math.max(LABEL_PAD, stageHeight - LABEL_PAD - a.height));
+    const box = { left, top, width: a.width, height: a.height };
+    placed.push({ box, leader: leaderTo(a, box) });
   }
   return placed;
 }
@@ -244,15 +273,83 @@ export function fitScale(aspect: number, reference = 1.6): number {
 
 export function placeTags(tags: readonly Tag[], camera: THREE.Camera, width: number, height: number, parent?: THREE.Object3D): void {
   const shown = tags.filter((t) => !t.el.hidden);
+  for (const tag of tags) if (tag.el.hidden) tag.line.hidden = true;
   const anchors = shown.map((tag) => {
     const p = tag.at.clone();
     if (parent) p.applyMatrix4(parent.matrixWorld);
     p.project(camera);
     return { x: ((p.x + 1) / 2) * width, y: ((1 - p.y) / 2) * height, width: tag.el.offsetWidth, height: tag.el.offsetHeight };
   });
-  declutter(anchors, width, height).forEach((box, i) => {
-    shown[i]!.el.style.transform = `translate(${box.left.toFixed(1)}px, ${box.top.toFixed(1)}px)`;
+  declutter(anchors, width, height).forEach((p, i) => {
+    const tag = shown[i]!;
+    tag.el.style.transform = `translate(${p.box.left.toFixed(1)}px, ${p.box.top.toFixed(1)}px)`;
+    const l = p.leader;
+    tag.line.hidden = !l;
+    if (!l) return;
+    const angle = Math.atan2(l.y2 - l.y1, l.x2 - l.x1);
+    tag.line.style.width = `${Math.hypot(l.x2 - l.x1, l.y2 - l.y1).toFixed(1)}px`;
+    tag.line.style.transform = `translate(${l.x1.toFixed(1)}px, ${l.y1.toFixed(1)}px) rotate(${angle.toFixed(4)}rad)`;
   });
+}
+
+const MARKER_CLEARANCE = 3;
+
+// Fallback markers sit on their anchors; clustered anchors take the nearest spot on a small grid that keeps every
+// marker at least MARKER_CLEARANCE px from the others and inside the stage, so numbers never touch. Pure, so it is unit tested.
+export function spreadMarkers(anchors: ReadonlyArray<{ x: number; y: number }>, sizes: ReadonlyArray<{ width: number; height: number }>, width: number, height: number): Array<{ left: number; top: number }> {
+  const placed: Array<{ left: number; top: number; width: number; height: number }> = [];
+  const grid = [-2, -1, 0, 1, 2].flatMap((dy) => [-2, -1, 0, 1, 2].map((dx) => [dx, dy] as const)).sort((p, q) => Math.hypot(p[0], p[1]) - Math.hypot(q[0], q[1]));
+  const c = MARKER_CLEARANCE;
+  anchors.forEach((a, i) => {
+    const { width: mw, height: mh } = sizes[i]!;
+    const inside = (l: number, t: number) => l >= 0 && t >= 0 && l + mw <= width && t + mh <= height;
+    const clear = (l: number, t: number) => placed.every((m) => l + mw + c <= m.left || m.left + m.width + c <= l || t + mh + c <= m.top || m.top + m.height + c <= t);
+    const baseL = a.x - mw / 2;
+    const baseT = a.y - mh / 2;
+    let spot = { left: Math.min(Math.max(0, baseL), width - mw), top: Math.min(Math.max(0, baseT), height - mh) };
+    for (const [dx, dy] of grid) {
+      const l = baseL + dx * (mw + c + 1);
+      const t = baseT + dy * (mh + c + 1);
+      if (inside(l, t) && clear(l, t)) { spot = { left: l, top: t }; break; }
+    }
+    placed.push({ ...spot, width: mw, height: mh });
+  });
+  return placed.map(({ left, top }) => ({ left, top }));
+}
+
+export interface BeaconLabel { readonly tag: Tag; readonly marker: HTMLElement; readonly side: 'left' | 'right' }
+
+// Beacon labels in the stage margins with one leader each (columnLayout). When that layout breaks a rule, the labels
+// hide and each beacon shows its number at the anchor; the caller then shows the numbered list. Returns true for labels.
+// Visibility, not display, hides the labels, so their sizes stay measurable.
+export function placeBeacons(beacons: readonly BeaconLabel[], camera: THREE.Camera, width: number, height: number, parent?: THREE.Object3D): boolean {
+  const anchors = beacons.map((b) => {
+    const p = b.tag.at.clone();
+    if (parent) p.applyMatrix4(parent.matrixWorld);
+    p.project(camera);
+    return { x: ((p.x + 1) / 2) * width, y: ((1 - p.y) / 2) * height, width: b.tag.el.offsetWidth, height: b.tag.el.offsetHeight, side: b.side };
+  });
+  const layout = columnLayout(anchors, { width, height, pad: LABEL_PAD, gap: 4 });
+  const spots = layout ? [] : spreadMarkers(anchors, beacons.map((b) => ({ width: b.marker.offsetWidth, height: b.marker.offsetHeight })), width, height);
+  beacons.forEach((b, i) => {
+    b.tag.el.style.visibility = layout ? '' : 'hidden';
+    b.marker.style.visibility = layout ? 'hidden' : '';
+    if (!layout) {
+      b.tag.line.hidden = true;
+      const spot = spots[i]!;
+      b.marker.style.transform = `translate(${spot.left.toFixed(1)}px, ${spot.top.toFixed(1)}px)`;
+      return;
+    }
+    const p = layout[i]!;
+    b.tag.el.style.transform = `translate(${p.box.left.toFixed(1)}px, ${p.box.top.toFixed(1)}px)`;
+    const l = p.leader;
+    b.tag.line.hidden = !l;
+    if (!l) return;
+    const angle = Math.atan2(l.y2 - l.y1, l.x2 - l.x1);
+    b.tag.line.style.width = `${Math.hypot(l.x2 - l.x1, l.y2 - l.y1).toFixed(1)}px`;
+    b.tag.line.style.transform = `translate(${l.x1.toFixed(1)}px, ${l.y1.toFixed(1)}px) rotate(${angle.toFixed(4)}rad)`;
+  });
+  return !!layout;
 }
 
 // "Show 2D chart" toggle. The shell listens for this bubbling event on the panel body and swaps in the 2D fallback.
