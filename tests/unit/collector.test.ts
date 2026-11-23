@@ -1,15 +1,18 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import type { RawSample } from '../../shared/types/sample.ts';
 import { assembleSample, benchEnvFor, labelForHost, pickEnv, readMatrix } from '../../collector/src/collect.ts';
 import { Deadline, MIN_STEP_MS, netStep } from '../../collector/src/benchmarks.ts';
 import {
-  blockDeviceOf, flagsFromSysctl, linuxDiskKind, normalizeFlags, parseCpuinfo, parseDiskutil, parseLscpu, parseOsRelease,
-  parseProcStat, parseSwVers, parseSysctlKv, parseWinDisk, stealPct, vendorFromBrand,
+  blockDeviceOf, compareSemver, flagsFromSysctl, linuxDiskKind, normalizeFlags, parseCpuinfo, parseDiskutil, parseLscpu, parseOsRelease,
+  parseProcStat, parseProcStatPpid, parsePsParentLine, parseSwVers, parseSysctlKv, parseWinDisk, readAgentVersion, semverFromPath, stealPct, vendorFromBrand,
 } from '../../collector/src/hardware.ts';
 import { scanForLeaks } from '../../collector/src/privacy.ts';
-import { cidrContains, fetchImds, inferFromEgress, longestMatch, parseCidr, parseIp, parseTraceIp, readPlacement } from '../../collector/src/region.ts';
+import { cidrContains, fetchImds, inferFromEgress, loadRegionTable, longestMatch, parseCidr, parseIp, parseTraceIp, readPlacement } from '../../collector/src/region.ts';
+import { buildRegionCidrs, normalizeAzureRegion } from '../../scripts/build-region-cidrs.ts';
 import { selfCheck } from '../../collector/src/selfcheck.ts';
 import { NULL_TIMING, buildTiming, cronDriftSec, scheduledSlotIso, totalDelaySec } from '../../collector/src/timing.ts';
 
@@ -180,6 +183,27 @@ describe('IMDS and egress placement', () => {
       ? new Response('ip=192.0.2.9\n')
       : jsonResponse({ actions: ['4.148.0.0/16'] }));
     expect(await inferFromEgress({ fetchFn: fake, table: [{ cidr: '20.0.0.0/8', region: 'x' }] })).toEqual({ method: 'none', matchedCidr: null, inferredRegion: null });
+  });
+
+  const egressFake = (ip: string, meta: string[]): FetchFn => async (url) => (String(url).includes('1.1.1.1')
+    ? new Response(`fl=1\nip=${ip}\n`)
+    : jsonResponse({ actions: meta, actions_macos: [] }));
+
+  it('keeps the curated region when a narrower /meta range matches', async () => {
+    const table = [{ cidr: '3.41.128.0/17', region: 'us-east-1' }];
+    const result = await inferFromEgress({ fetchFn: egressFake('3.41.210.5', ['3.41.210.0/24']), table });
+    expect(result).toEqual({ method: 'cidr', matchedCidr: '3.41.210.0/24', inferredRegion: 'us-east-1' });
+  });
+
+  it('keeps the table region on a prefix tie with /meta', async () => {
+    const table = [{ cidr: '10.0.0.0/8', region: 'eastus' }];
+    const result = await inferFromEgress({ fetchFn: egressFake('10.1.2.3', ['10.0.0.0/8']), table });
+    expect(result).toEqual({ method: 'cidr', matchedCidr: '10.0.0.0/8', inferredRegion: 'eastus' });
+  });
+
+  it('a /meta-only match reports a null region', async () => {
+    const result = await inferFromEgress({ fetchFn: egressFake('4.148.1.2', ['4.148.0.0/16']), table: [{ cidr: '20.0.0.0/8', region: 'eastus' }] });
+    expect(result).toEqual({ method: 'cidr', matchedCidr: '4.148.0.0/16', inferredRegion: null });
   });
 });
 
@@ -416,6 +440,118 @@ describe('every path is schema-valid', () => {
     const sample = assembleSample({ ...base(), place: { imdsStatus: 'unreachable', region: null, vmSize: null, inferredRegion: null, matchedCidr: '4.148.1.2/32', method: 'cidr' } });
     expect(validate(sample)).toBe(false);
     expect(selfCheck(JSON.stringify(sample))).toContain('bad:place.matchedCidr');
+  });
+});
+
+describe('committed region table', () => {
+  const table = loadRegionTable();
+
+  it('resolves the AWS us-east-1 and us-west-2 sample addresses', () => {
+    expect(longestMatch('3.41.210.5', table)?.region).toBe('us-east-1');
+    expect(longestMatch('3.42.157.5', table)?.region).toBe('us-west-2');
+  });
+
+  it('holds no IPv4 /32 or IPv6 /128 ranges', () => {
+    expect(table.length).toBeGreaterThan(10000);
+    expect(table.filter((e) => e.cidr.endsWith('/128') || (e.cidr.endsWith('/32') && !e.cidr.includes(':')))).toEqual([]);
+  });
+});
+
+describe('region table builder', () => {
+  it('canonicalizes Azure short names and trims and lowercases', () => {
+    expect(normalizeAzureRegion(' CentralFrance ')).toBe('francecentral');
+    expect(normalizeAzureRegion('chilec')).toBe('chilecentral');
+    expect(normalizeAzureRegion('germanywc')).toBe('germanywestcentral');
+    expect(normalizeAzureRegion('eastus')).toBe('eastus');
+  });
+
+  it('builds sorted, deduplicated AWS EC2 and AzureCloud rows, excluding host routes and other services', () => {
+    const out = buildRegionCidrs({
+      aws: {
+        prefixes: [
+          { ip_prefix: '3.41.128.0/17', region: 'US-EAST-1', service: 'EC2' },
+          { ip_prefix: '3.41.128.0/17', region: 'us-east-1', service: 'EC2' },
+          { ip_prefix: '3.4.0.1/32', region: 'us-east-1', service: 'EC2' },
+          { ip_prefix: '52.0.0.0/11', region: 'GLOBAL', service: 'EC2' },
+          { ip_prefix: '52.1.0.0/16', region: 'us-east-1', service: 'S3' },
+        ],
+        ipv6_prefixes: [
+          { ipv6_prefix: '2600:1f00::/40', region: 'us-west-2', service: 'EC2' },
+          { ipv6_prefix: '2600:1f00::1/128', region: 'us-west-2', service: 'EC2' },
+        ],
+      },
+      azure: {
+        values: [
+          { name: 'AzureCloud.francecentral', properties: { region: 'centralfrance', addressPrefixes: ['4.144.0.0/17', '4.144.0.1/32'] } },
+          { name: 'AzureCloud.westus', properties: { region: 'westus', addressPrefixes: ['20.42.0.0/16'] } },
+          { name: 'Storage.westus', properties: { region: 'westus', addressPrefixes: ['20.43.0.0/16'] } },
+          { name: 'AzureCloud.chilec', properties: { region: 'chilec', addressPrefixes: ['20.42.0.0/16', '2a01:111::/32', '2a01:111::1/128'] } },
+        ],
+      },
+      azureSource: 'azure-service-tags-test',
+    });
+    expect(out).toEqual([
+      { cidr: '2600:1f00::/40', region: 'us-west-2', provider: 'aws', source: 'aws-ip-ranges-EC2' },
+      { cidr: '3.41.128.0/17', region: 'us-east-1', provider: 'aws', source: 'aws-ip-ranges-EC2' },
+      { cidr: '20.42.0.0/16', region: 'chilecentral', provider: 'azure', source: 'azure-service-tags-test' },
+      { cidr: '20.42.0.0/16', region: 'westus', provider: 'azure', source: 'azure-service-tags-test' },
+      { cidr: '2a01:111::/32', region: 'chilecentral', provider: 'azure', source: 'azure-service-tags-test' },
+      { cidr: '4.144.0.0/17', region: 'francecentral', provider: 'azure', source: 'azure-service-tags-test' },
+    ]);
+  });
+});
+
+describe('agent version helpers', () => {
+  it('compares numeric semver parts, not lexical ones', () => {
+    expect(compareSemver('2.338.2', '2.99.0')).toBe(1);
+    expect(compareSemver('2.99.0', '2.338.2')).toBe(-1);
+    expect(compareSemver('2.329.0', '2.329.0')).toBe(0);
+  });
+
+  it('extracts a semver from runner paths only', () => {
+    expect(semverFromPath('/home/runner/runners/2.338.2/bin/Runner.Worker')).toBe('2.338.2');
+    expect(semverFromPath('/home/runner/actions-runner/bin.2.329.0/Runner.Listener')).toBe('2.329.0');
+    expect(semverFromPath('C:\\agents\\externals.2.330.0\\x')).toBe('2.330.0');
+    expect(semverFromPath('/Users/runner/work/_temp')).toBeNull();
+    expect(semverFromPath('/home/runner/runners/2.338.2/bin/Runner.Worker.dll')).toBe('2.338.2');
+  });
+
+  it('reads the ppid from /proc stat even when the command name has spaces and parens', () => {
+    expect(parseProcStatPpid('4242 (Runner.Worker (x)) S 4100 4242 4100 0 -1')).toBe(4100);
+    expect(parseProcStatPpid('1 (init) S 0 1 1')).toBeNull();
+    expect(parseProcStatPpid('garbage')).toBeNull();
+  });
+
+  it('parses a ps parent line', () => {
+    expect(parsePsParentLine('  4100 /Users/runner/actions-runner/bin/Runner.Listener run\n')).toEqual({ ppid: 4100, command: '/Users/runner/actions-runner/bin/Runner.Listener run' });
+    expect(parsePsParentLine('')).toBeNull();
+  });
+
+  it('picks the highest numeric runner directory, and the bin.<semver> root', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'atlas-agent-'));
+    try {
+      mkdirSync(join(home, 'runners', '2.99.0'), { recursive: true });
+      mkdirSync(join(home, 'runners', '2.338.2'), { recursive: true });
+      expect(await readAgentVersion({ home, runnerTemp: undefined, platform: 'linux', skipSystemPaths: true })).toBe('2.338.2');
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+    const home2 = mkdtempSync(join(tmpdir(), 'atlas-agent-'));
+    try {
+      mkdirSync(join(home2, 'actions-runner', 'bin.2.338.2'), { recursive: true });
+      expect(await readAgentVersion({ home: home2, runnerTemp: undefined, platform: 'linux', skipSystemPaths: true })).toBe('2.338.2');
+    } finally {
+      rmSync(home2, { recursive: true, force: true });
+    }
+  });
+
+  it('returns null for an empty home when host-global system paths are skipped', async () => {
+    const emptyDir = mkdtempSync(join(tmpdir(), 'atlas-agent-empty-'));
+    try {
+      expect(await readAgentVersion({ home: emptyDir, runnerTemp: undefined, platform: 'linux', ppid: 1, skipSystemPaths: true })).toBeNull();
+    } finally {
+      rmSync(emptyDir, { recursive: true, force: true });
+    }
   });
 });
 

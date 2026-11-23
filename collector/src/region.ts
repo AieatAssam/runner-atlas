@@ -146,9 +146,14 @@ export async function inferFromEgress(opts: { token?: string; fetchFn?: FetchFn;
     if (!egress) return none;
     const table = opts.table ?? loadRegionTable();
     const meta = await fetchMetaRanges(opts.token, fetchFn);
-    const hit = longestMatch(egress, [...table, ...meta]);
-    if (!hit) return none;
-    return { method: 'cidr', matchedCidr: hit.cidr, inferredRegion: hit.region };
+    // Table and /meta are matched separately: a narrower /meta range must not hide the curated region.
+    const tableHit = longestMatch(egress, table);
+    const metaHit = longestMatch(egress, meta);
+    if (!tableHit && !metaHit) return none;
+    const tablePrefix = tableHit ? (parseCidr(tableHit.cidr)?.prefix ?? -1) : -1;
+    const metaPrefix = metaHit ? (parseCidr(metaHit.cidr)?.prefix ?? -1) : -1;
+    const matchedCidr = tablePrefix >= metaPrefix ? tableHit!.cidr : metaHit!.cidr;
+    return { method: 'cidr', matchedCidr, inferredRegion: tableHit?.region ?? null };
   } catch {
     return none;
   }

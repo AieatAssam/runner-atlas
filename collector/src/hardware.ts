@@ -1,7 +1,7 @@
 // Hardware, OS, disk and agent facts (SPEC 3.3, 3.5). Parsers are pure; readers wrap fixed-argv subprocesses.
 import { execFile } from 'node:child_process';
-import { readFileSync, readdirSync, statfsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { readFileSync, readdirSync, readlinkSync, statfsSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { RawSample } from '../../shared/types/sample.ts';
 
@@ -178,23 +178,133 @@ export function parseWinDisk(json: string): { kind: DiskKind } {
   return { kind: 'unknown' };
 }
 
-// Agent version (best effort, each attempt <= 1000 ms). Returns a bare semver or null.
+// Agent version (best effort, each attempt <= 2000 ms). Returns a bare semver or null. Runner paths are read in memory only.
 const SEMVER = /^\d+\.\d+\.\d+$/;
-export async function readAgentVersion(opts: { home: string; runnerTemp: string | undefined; platform: NodeJS.Platform }): Promise<string | null> {
-  try {
-    const dirs = readdirSync(join(opts.home, 'runners')).filter((d) => SEMVER.test(d)).sort();
-    if (dirs.length > 0) return dirs[dirs.length - 1];
-  } catch {
-    // no hosted-image runner directory
+const AGENT_ATTEMPT_MS = 2000;
+const RUNNER_BIN = /^Runner\.(Worker|Listener)(?:\.dll)?$/;
+
+export function compareSemver(a: string, b: string): number {
+  const x = a.split('.').map(Number);
+  const y = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (x[i] !== y[i]) return x[i] > y[i] ? 1 : -1;
   }
-  if (!opts.runnerTemp) return null;
-  const exe = opts.platform === 'win32' ? 'Runner.Listener.exe' : 'Runner.Listener';
-  for (const root of [dirname(opts.runnerTemp), dirname(dirname(opts.runnerTemp))]) {
-    const out = await run(join(root, 'bin', exe), ['--version'], 1000);
+  return 0;
+}
+
+// Pulls a `<semver>` segment out of an executable path, e.g. `.../2.338.2/bin/Runner.Worker` or `.../bin.2.338.2/...`.
+export function semverFromPath(p: string): string | null {
+  const m = p.match(/(?:^|[\\/])(?:bin\.|externals\.)?(\d+\.\d+\.\d+)(?:[\\/]|$)/);
+  return m && SEMVER.test(m[1]) ? m[1] : null;
+}
+
+// /proc/<pid>/stat: the ppid is field 1 after the `)` that closes the command name.
+export function parseProcStatPpid(statText: string): number | null {
+  const close = statText.lastIndexOf(')');
+  if (close < 0) return null;
+  const ppid = statText.slice(close + 1).trim().split(/\s+/)[1];
+  return ppid !== undefined && /^\d+$/.test(ppid) && Number(ppid) > 0 ? Number(ppid) : null;
+}
+
+// `ps -p <pid> -o ppid=,command=` output.
+export function parsePsParentLine(line: string): { ppid: number; command: string } | null {
+  const m = line.match(/^\s*(\d+)\s+(.+?)\s*$/);
+  return m ? { ppid: Number(m[1]), command: m[2] } : null;
+}
+
+function subdirNames(dir: string): string[] {
+  try {
+    return readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+  } catch {
+    return [];
+  }
+}
+
+// Versions from `<root>/bin.<semver>` directories.
+function binVersions(root: string): string[] {
+  return subdirNames(root).map((n) => n.match(/^bin\.(\d+\.\d+\.\d+)$/)?.[1]).filter((v): v is string => v !== undefined);
+}
+
+// Version from the executable's own path, else from `<sibling> --version`.
+async function versionFromExecutable(exePath: string, exeName: string): Promise<string | null> {
+  const fromPath = semverFromPath(exePath);
+  if (fromPath) return fromPath;
+  const out = await run(join(dirname(exePath), exeName), ['--version'], AGENT_ATTEMPT_MS);
+  const v = out?.trim().split('\n')[0]?.trim() ?? '';
+  return SEMVER.test(v) ? v : null;
+}
+
+export async function readAgentVersion(opts: { home: string; runnerTemp: string | undefined; platform: NodeJS.Platform; ppid?: number; skipSystemPaths?: boolean }): Promise<string | null> {
+  const { home, runnerTemp, platform } = opts;
+  const exeName = platform === 'win32' ? 'Runner.Listener.exe' : 'Runner.Listener';
+  const newest = (vs: string[]): string => vs.reduce((best, v) => (compareSemver(v, best) > 0 ? v : best));
+
+  // 1a. Home-scoped scan first. A hit returns here, so host-global paths are never read.
+  const homeScanned = [
+    ...[join(home, 'runners'), join(home, 'agents')].flatMap(subdirNames),
+    ...[join(home, 'actions-runner'), ...(runnerTemp ? [dirname(runnerTemp), dirname(dirname(runnerTemp))] : [])].flatMap(binVersions),
+  ].filter((v) => SEMVER.test(v));
+  if (homeScanned.length > 0) return newest(homeScanned);
+
+  // 1b. Host-global system dirs, unless the caller opts out (tests on hosted CI).
+  if (!opts.skipSystemPaths) {
+    const systemScanned = [
+      ...(platform === 'win32' ? ['C:\\agents', 'D:\\agents'] : ['/home/runner/runners', '/Users/runner/runners', '/opt/runner']).flatMap(subdirNames),
+      ...(platform === 'win32' ? ['C:\\actions-runner'] : ['/home/runner/actions-runner', '/Users/runner/actions-runner', '/opt/actions-runner']).flatMap(binVersions),
+    ].filter((v) => SEMVER.test(v));
+    if (systemScanned.length > 0) return newest(systemScanned);
+  }
+
+  // 2. Active ancestor: a running Runner.Worker or Runner.Listener names its own install. Walk up at most 8 parents.
+  let pid = opts.ppid ?? process.ppid;
+  if (platform === 'linux') {
+    for (let i = 0; i < 8 && pid > 1; i++) {
+      const args = readOrNull(`/proc/${pid}/cmdline`)?.split('\0') ?? [];
+      const hit = [readlinkOrNull(`/proc/${pid}/exe`), ...args].find((c): c is string => c !== null && RUNNER_BIN.test(basename(c)));
+      if (hit) {
+        const v = await versionFromExecutable(hit, 'Runner.Listener');
+        if (v) return v;
+      }
+      const next = parseProcStatPpid(readOrNull(`/proc/${pid}/stat`) ?? '');
+      if (next === null) break;
+      pid = next;
+    }
+  } else if (platform === 'darwin') {
+    for (let i = 0; i < 8 && pid > 1; i++) {
+      const parsed = parsePsParentLine((await run('ps', ['-p', String(pid), '-o', 'ppid=,command='], 1000)) ?? '');
+      if (!parsed) break;
+      const m = parsed.command.match(/(?:^|\s)(\/\S*?\/Runner\.(?:Worker|Listener))(?:\s|$)/);
+      if (m) {
+        const v = await versionFromExecutable(m[1], 'Runner.Listener');
+        if (v) return v;
+      }
+      pid = parsed.ppid;
+    }
+  } else if (platform === 'win32' && !opts.skipSystemPaths) {
+    const exePath = (await run('powershell', ['-NoProfile', '-NonInteractive', '-Command', "Get-CimInstance Win32_Process -Filter \"Name='Runner.Worker.exe' OR Name='Runner.Listener.exe'\" | Select-Object -First 1 -ExpandProperty ExecutablePath"], AGENT_ATTEMPT_MS))?.trim() ?? '';
+    if (exePath) {
+      const v = await versionFromExecutable(exePath, 'Runner.Listener.exe');
+      if (v) return v;
+    }
+  }
+
+  // 3. Direct `Runner.Listener --version` on the candidate roots.
+  const systemRoot = platform === 'win32' ? 'C:\\actions-runner' : '/opt/actions-runner';
+  const roots = [...new Set([runnerTemp ? dirname(runnerTemp) : null, runnerTemp ? dirname(dirname(runnerTemp)) : null, join(home, 'actions-runner'), ...(opts.skipSystemPaths ? [] : [systemRoot])].filter((r): r is string => r !== null))];
+  for (const root of roots) {
+    const out = await run(join(root, 'bin', exeName), ['--version'], AGENT_ATTEMPT_MS);
     const v = out?.trim().split('\n')[0]?.trim() ?? '';
     if (SEMVER.test(v)) return v;
   }
   return null;
+}
+
+function readlinkOrNull(path: string): string | null {
+  try {
+    return readlinkSync(path);
+  } catch {
+    return null;
+  }
 }
 
 // Reads a whole file, or null when absent or unreadable.

@@ -60,5 +60,13 @@
   "indonesiacentral": { "lat": -6.21, "lon": 106.85, "label": "Indonesia Central (Jakarta)" },
   "newzealandnorth": { "lat": -36.85, "lon": 174.76, "label": "New Zealand North (Auckland)" },
   "australiacentral": { "lat": -35.28, "lon": 149.13, "label": "Australia Central (Canberra)" },
-  "us-west-1": { "lat": 37.34, "lon": -121.89, "label": "US West (N. California)" }
+  "us-west-1": { "lat": 37.34, "lon": -121.89, "label": "US West (N. California)" },
+  "ca-central-1": { "lat": 45.5, "lon": -73.57, "label": "Canada (Central)" },
+  "eu-west-2": { "lat": 51.51, "lon": -0.13, "label": "Europe (London)" },
+  "eu-west-3": { "lat": 48.86, "lon": 2.35, "label": "Europe (Paris)" },
+  "eu-north-1": { "lat": 59.33, "lon": 18.07, "label": "Europe (Stockholm)" },
+  "ap-south-1": { "lat": 19.08, "lon": 72.88, "label": "Asia Pacific (Mumbai)" },
+  "ap-northeast-2": { "lat": 37.57, "lon": 126.98, "label": "Asia Pacific (Seoul)" },
+  "ap-southeast-2": { "lat": -33.87, "lon": 151.21, "label": "Asia Pacific (Sydney)" },
+  "sa-east-1": { "lat": -23.55, "lon": -46.63, "label": "South America (Sao Paulo)" }
 }

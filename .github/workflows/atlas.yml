@@ -2,6 +2,7 @@ name: atlas
 
 on:
   schedule:
+    # Hourly at :17 UTC to avoid top-of-hour queue congestion (D-002)
     - cron: '17 * * * *'
   workflow_dispatch:
 
