@@ -1,0 +1,165 @@
+name: atlas
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  plan:
+    name: plan
+    if: github.event_name != 'schedule' || vars.RUNNER_ATLAS_CRON_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.filter.outputs.matrix }}
+    steps:
+      - name: Checkout matrix
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: collector/matrix.json
+          sparse-checkout-cone-mode: false
+
+      - name: Build matrix
+        id: filter
+        env:
+          DISABLED_LABELS: ${{ vars.RUNNER_ATLAS_DISABLED_LABELS }}
+        run: |
+          matrix=$(jq -c --arg off "$DISABLED_LABELS" '
+            ($off | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))) as $disabled
+            | {include: [
+                .[] as $row
+                | select(any($disabled[]; . == $row.label) | not)
+                | range(1; $row.replicas + 1) as $r
+                | {label: $row.label, replica: $r, optional: $row.optional}
+              ]}
+          ' collector/matrix.json)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "$matrix" | jq .
+
+  collect:
+    name: collect ${{ matrix.label }} r${{ matrix.replica }}
+    needs: plan
+    if: ${{ needs.plan.outputs.matrix != '{"include":[]}' }}
+    runs-on: ${{ matrix.label }}
+    continue-on-error: ${{ matrix.optional }}
+    timeout-minutes: 6
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - name: Checkout collector
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            package.json
+            collector/src
+            collector/data
+            collector/matrix.json
+            shared/types
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Collect sample
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node collector/src/collect.ts --label "${{ matrix.label }}" --replica "${{ matrix.replica }}" --out sample.json
+
+      - name: Upload sample
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sample-${{ matrix.label }}-r${{ matrix.replica }}
+          path: sample.json
+          retention-days: 3
+          if-no-files-found: error
+
+  publish:
+    name: publish
+    needs: [plan, collect]
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: runner-atlas-publish
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download samples
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          pattern: sample-*
+          path: .tmp/incoming
+          merge-multiple: false
+
+      - name: Ingest, rollup and push
+        shell: bash
+        run: bash scripts/publish.sh
+
+      - name: Resolve site URL
+        shell: bash
+        env:
+          SITE_URL_VAR: ${{ vars.RUNNER_ATLAS_SITE_URL }}
+        run: |
+          if [ -n "$SITE_URL_VAR" ]; then
+            url="$SITE_URL_VAR"
+          else
+            owner="${GITHUB_REPOSITORY%%/*}"
+            repo="${GITHUB_REPOSITORY#*/}"
+            url="https://${owner}.github.io/${repo}/"
+          fi
+          echo "RUNNER_ATLAS_SITE_URL=$url" >> "$GITHUB_ENV"
+
+      - name: Build site
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/dist
+
+  deploy:
+    name: deploy
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

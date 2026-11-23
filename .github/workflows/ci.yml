@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  workflow-lint:
+    name: workflow lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+
+      - name: Run actionlint
+        run: '"$(go env GOPATH)/bin/actionlint"'
+
+      - name: Check every uses pinned to a commit SHA
+        shell: bash
+        run: '! grep -E "^\s*-?\s*uses: " .github/workflows/*.yml | grep -vE "@[0-9a-f]{40}"'
+
+  verify:
+    name: verify
+    if: "github.event_name == 'pull_request' || !startsWith(github.event.head_commit.message, 'data: sweep ')"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit and integration tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: No colour literals in site source
+        shell: bash
+        run: '! grep -rnE --include="*.ts" "#[0-9a-fA-F]{3,8}\b|rgb\(|hsl\(|oklch\(" site/src'
+
+      - name: Hallmark sloplint (static tier)
+        run: node .claude/skills/hallmark/scripts/sloplint.mjs site/index.html site/src/styles --scope app --genre modern-minimal
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run e2e
