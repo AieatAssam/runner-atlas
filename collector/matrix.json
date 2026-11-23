@@ -1,0 +1,8 @@
+[
+  { "label": "ubuntu-24.04", "replicas": 3, "optional": false, "os": "linux", "arch": "x64" },
+  { "label": "ubuntu-24.04-arm", "replicas": 2, "optional": false, "os": "linux", "arch": "arm64" },
+  { "label": "windows-2025", "replicas": 2, "optional": false, "os": "win32", "arch": "x64" },
+  { "label": "windows-11-arm", "replicas": 1, "optional": true, "os": "win32", "arch": "arm64" },
+  { "label": "macos-15", "replicas": 2, "optional": false, "os": "darwin", "arch": "arm64" },
+  { "label": "macos-15-intel", "replicas": 1, "optional": true, "os": "darwin", "arch": "x64" }
+]
