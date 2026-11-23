@@ -2,6 +2,7 @@ import '@fontsource-variable/hepta-slab';
 import '@fontsource-variable/public-sans';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
+import './styles/scenes.css';
 import { loadManifest } from './data.ts';
 import { panelById } from './panels.ts';
 import { initRouter } from './router.ts';

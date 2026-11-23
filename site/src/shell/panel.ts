@@ -26,6 +26,8 @@ export class PanelView {
   private busy = false;
   private lastWidth = 0;
   private readonly body: HTMLElement;
+  private chartRoot: HTMLElement;      // body, or a child of it while the user-chosen 2D view keeps its toggle below
+  private swapping = false;
   private readonly caption: HTMLElement;
 
   private readonly section: HTMLElement;
@@ -40,7 +42,10 @@ export class PanelView {
     const caption = section.querySelector<HTMLElement>('.panel__caption');
     if (!body || !caption) throw new Error(`panel ${def.id} is missing its body or caption`);
     this.body = body;
+    this.chartRoot = body;
     this.caption = caption;
+    // Scenes dispatch this from their "Show 2D chart" button (scenes/_common.ts twoDToggle).
+    body.addEventListener('scene:show-2d', () => void this.showTwoD());
   }
 
   // Shows the charting state when the tier is closed, or the lazily loaded chart when it is open.
@@ -103,8 +108,8 @@ export class PanelView {
     const mod = this.mod as ChartModule<never>;
     this.abort?.abort();
     this.abort = new AbortController();
-    this.body.replaceChildren();
-    const ctx = this.context(this.body, this.abort.signal);
+    this.chartRoot.replaceChildren();
+    const ctx = this.context(this.chartRoot, this.abort.signal);
     mod.render(ctx, this.data as never);
     this.renderCaption(mod.caption(this.data as never));
     this.lastWidth = this.body.clientWidth;
@@ -135,8 +140,52 @@ export class PanelView {
     if (!this.def.fallback) throw new Error(`panel ${this.def.id} has no fallback`);
     this.mod = (await this.def.fallback()).default;
     this.sceneKind = false;
+    this.chartRoot = this.body;
     this.renderChart();
     announce(`${this.def.title} shows its 2D chart because ${reason}.`);
+  }
+
+  // User chose the 2D chart: drop the scene, render the fallback with a pressed toggle below it that returns to 3D.
+  private async showTwoD(): Promise<void> {
+    if (!this.scene || this.swapping || !this.def.fallback) return;
+    this.swapping = true;
+    // Remove the listener first: dispose() forces a real context loss, which must not read as a failure.
+    this.body.removeEventListener('webglcontextlost', this.onContextLost, { capture: true });
+    this.abort?.abort();
+    this.scene.dispose();
+    this.scene = null;
+    try {
+      this.mod = (await this.def.fallback()).default;
+      this.sceneKind = false;
+      const toggle = el('button', { type: 'button', class: 'scene__button', 'aria-pressed': 'true' }, 'Show 2D chart');
+      this.chartRoot = el('div', {});
+      this.body.replaceChildren(this.chartRoot, el('div', { class: 'scene__controls' }, toggle));
+      this.renderChart();
+      toggle.addEventListener('click', () => void this.showThreeD(), { once: true });
+      toggle.focus();
+      announce(`${this.def.title} shows its 2D chart.`);
+    } catch {
+      this.showError();
+    } finally {
+      this.swapping = false;
+    }
+  }
+
+  private async showThreeD(): Promise<void> {
+    if (this.swapping) return;
+    this.swapping = true;
+    this.chartRoot = this.body;
+    try {
+      await this.startScene();
+      if (this.scene) {
+        this.body.querySelector<HTMLElement>('[data-show-2d]')?.focus();
+        announce(`${this.def.title} shows its 3D view.`);
+      }
+    } catch {
+      this.showError();
+    } finally {
+      this.swapping = false;
+    }
   }
 
   private context(root: HTMLElement, signal: AbortSignal): RenderContext {
@@ -191,6 +240,7 @@ export class PanelView {
   private showError(): void {
     const file = this.def.rollup;
     this.abort?.abort();
+    this.chartRoot = this.body;
     replaceChildren(
       this.body,
       el('p', { class: 'panel__error' },
