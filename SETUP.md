@@ -80,6 +80,10 @@ default.
       `RUNNER_ATLAS_CRON_ENABLED` = `true`.
 - [ ] To pause the survey later, set it to any other value or delete it.
 
+### 6b. Optional: hourly Cloudflare Worker trigger (free tier)
+
+Because GitHub's native `on: schedule` runs on a best-effort queue and may fire infrequently on personal or newly created repositories, you can supplement it with the free-tier Cloudflare Worker in [workers/trigger/README.md](workers/trigger/README.md). Keep `on: schedule` intact in `.github/workflows/atlas.yml`: genuine `schedule` events continue supplying real `cronDriftSec` telemetry whenever GitHub dispatches them, while the Worker's `:17 UTC` `workflow_dispatch` calls sustain hourly fleet and benchmark sweeps.
+
 ## 7. Optional repository variables
 
 - [ ] `RUNNER_ATLAS_DISABLED_LABELS`: a comma-separated list of labels to skip, for example

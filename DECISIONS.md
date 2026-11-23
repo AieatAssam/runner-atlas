@@ -191,3 +191,11 @@ Decision:
 - Workflow. The hourly cron trigger in `.github/workflows/atlas.yml` has a comment explaining the :17 offset (D-002). Its logic is unchanged.
 
 Consequences: the committed table now holds the AWS EC2 and Azure `AzureCloud.*` ranges from one generator run (22262 rows, from 14633). It has no `/32` IPv4 or `/128` IPv6 rows. One IPv6 `/32` row is kept, since the rule excludes only IPv4 `/32` and IPv6 `/128`. Regions published without coordinates still fall back to `unknown` in the aggregator. The `NOTICE` text already names these sources and stays accurate. The raw samples and rollups are unchanged.
+
+## D-028 Cloudflare Worker cron supplementing GitHub native `on: schedule` (2026-11-23)
+
+Context: across 14+ hours after creation on a personal free account (`AieatAssam/runner-atlas`), `.github/workflows/atlas.yml` (`17 * * * *`, `state: active`, `RUNNER_ATLAS_CRON_ENABLED=true`) received zero `event: "schedule"` runs while manual `workflow_dispatch` runs succeeded repeatedly (14/14 jobs). Checking other repositories on the same account confirmed multi-hour Day-0 delays and low hourly `schedule` dispatch rates on GitHub's best-effort scheduler. Replacing `on: schedule` in `atlas.yml` would eliminate genuine `cronDriftSec` measurements for the Drift panel (D-004, timing contract in SPEC 3.7).
+
+Decision: leave `.github/workflows/atlas.yml` untouched so genuine `schedule` runs continue populating `cronDriftSec`, queue telemetry, and slot coverage whenever GitHub fires them, and add a zero-dependency free-tier Cloudflare Worker under `workers/trigger/` running on cron `17 * * * *` (`workers_dev = false`, `preview_urls = false`). Before calling GitHub's `workflow_dispatch` endpoint, the Worker checks the 5 latest workflow runs and skips if a run is active or was created within `DEDUPE_WINDOW_MINUTES` (default 20), failing open on transient preflight errors and loudly on `401`/`403` auth errors.
+
+Consequences: Fleet, Benchmarks, Regions, Neighbours, and Rollouts receive hourly sweeps regardless of GitHub's scheduler throttling, while Drift continues recording strictly authentic `event: "schedule"` measurements without double-triggering adjacent sweeps. No npm packages or root runtime changes are required.

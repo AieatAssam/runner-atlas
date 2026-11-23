@@ -1,0 +1,18 @@
+name = "runner-atlas-trigger"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = false
+preview_urls = false
+
+[triggers]
+crons = ["17 * * * *"]
+
+[vars]
+GITHUB_REPO = "AieatAssam/runner-atlas"
+GITHUB_WORKFLOW = "atlas.yml"
+GITHUB_REF = "main"
+DEDUPE_WINDOW_MINUTES = "20"
+ENABLED = "true"
+
+[observability]
+enabled = true
