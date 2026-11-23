@@ -93,8 +93,10 @@ export function metricValue(s: RawSample, metric: MetricId | 'totalDelaySec'): n
   }
 }
 
+// Azure IMDS reports mixed case (`ChileCentral`); coordinate keys are lowercase.
 export function regionKey(s: RawSample): string {
-  return s.place.region ?? s.place.inferredRegion ?? 'unknown';
+  const r = s.place.region ?? s.place.inferredRegion;
+  return r ? r.trim().toLowerCase() : 'unknown';
 }
 
 export function labelIndex(label: RunnerLabel): number {

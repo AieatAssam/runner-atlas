@@ -3,8 +3,10 @@ const RULES: Array<[RegExp, (m: RegExpMatchArray) => string]> = [
   [/AMD EPYC\s+(\w{4})/i, (m) => `AMD EPYC ${m[1].toUpperCase()}`],
   [/Xeon\s+(?:\(R\)\s+)?Platinum\s+(\w{4}[A-Z]?)/i, (m) => `Intel Xeon Platinum ${m[1].toUpperCase()}`],
   [/Xeon\s+(?:\(R\)\s+)?(Gold|Silver|Bronze)\s+(\w{4}[A-Z]?)/i, (m) => `Intel Xeon ${m[1]} ${m[2].toUpperCase()}`],
+  [/Xeon\s+(?:\(R\)\s+)?(\d{4}[A-Z0-9-]*)/i, (m) => `Intel Xeon ${m[1].toUpperCase()}`],
   [/Core\s*(?:\(TM\)\s*)?(i\d-\w+)/i, (m) => `Intel Core ${m[1].toLowerCase()}`],
-  [/Neoverse-N\d/i, (m) => m[0].replace(/neoverse/i, 'Neoverse')],
+  [/Neoverse-([NV]\d+)/i, (m) => `Neoverse-${m[1].toUpperCase()}`],
+  [/Cobalt\s+(\d+)/i, (m) => `Microsoft Cobalt ${m[1]}`],
   [/Ampere\s+Altra/i, () => 'Ampere Altra'],
   [/Apple\s+(M\d+(?:\s+(?:Pro|Max|Ultra))?)(\s*\(Virtual\))?/i, (m) => `Apple ${m[1]}${m[2] ? ' (Virtual)' : ''}`],
 ];

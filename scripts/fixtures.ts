@@ -6,6 +6,8 @@ import { existsSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { writeSynthetic } from './synthetic/generate.ts';
+import { buildRollups, writeRollups } from '../aggregator/src/rollup.ts';
+import { loadCoords } from '../aggregator/src/cli.ts';
 
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const VITE = join(REPO, 'node_modules', 'vite', 'bin', 'vite.js');
@@ -22,9 +24,16 @@ export function syntheticRollups(days: number): string {
   return join(fixture, 'rollups');
 }
 
-// The committed Day-0 rollups for the default build, or the synthetic rollups of a named preset.
+// Empty Day-0 rollups, rebuilt deterministically into .tmp/fixtures (never data/), so e2e does not depend on data/rollups.
+export function day0Rollups(): string {
+  const dir = join(REPO, '.tmp', 'fixtures', 'day-0', 'rollups');
+  writeRollups(dir, buildRollups([], loadCoords(), 'empty'));
+  return dir;
+}
+
+// The empty Day-0 rollups for the default build, or the synthetic rollups of a named preset.
 export function rollupsFor(name: string): string {
-  if (name === 'day-0') return join(REPO, 'data', 'rollups');
+  if (name === 'day-0') return day0Rollups();
   const match = /^day-(\d+)$/.exec(name);
   if (!match) throw new Error(`unknown fixture ${name}`);
   return syntheticRollups(Number(match[1]));

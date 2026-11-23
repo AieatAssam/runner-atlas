@@ -437,6 +437,7 @@ describe('guardrails', () => {
 
   it('vendor and version helpers', () => {
     expect(vendorFromBrand('Intel(R) Xeon(R)')).toBe('Intel');
+    expect(vendorFromBrand('Cobalt 100')).toBe('Microsoft');
     expect(vendorFromBrand('Mystery CPU')).toBe('unknown');
     expect(vendorFromBrand(null)).toBe('unknown');
   });

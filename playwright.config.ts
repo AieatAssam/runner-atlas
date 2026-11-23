@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Two fixtures, two ports (scripts/fixtures.ts): the committed Day-0 rollups, and a synthetic Day-90 survey.
+// Two fixtures, two ports (scripts/fixtures.ts): an empty Day-0 build (rebuilt into .tmp, not data/), and a synthetic Day-90 survey.
 // Each webServer builds its fixture first, so the timeout covers a cold build.
 const DAY_0 = 'http://127.0.0.1:4173/';
 const DAY_90 = 'http://127.0.0.1:4174/';

@@ -119,30 +119,63 @@ describe('synthetic presets', () => {
   });
 });
 
-describe('Day-0 rollups in data/rollups', () => {
-  it('the raw store holds no samples and only the placeholder file', () => {
-    expect(loadRaw(RAW_DIR)).toEqual([]);
+describe('committed data/rollups', () => {
+  it('the raw store holds only the placeholder file and live samples (D-004)', () => {
     expect(readFileSync(join(RAW_DIR, '.gitkeep'), 'utf8')).toBe('');
+    const raw = loadRaw(RAW_DIR);
+    for (const s of raw) expect(s.src, s.id).toBe('live');
   });
 
-  it('match a fresh build from an empty store, byte for byte', () => {
-    const fresh = buildRollups([], coords, 'empty');
-    for (const name of [...ROLLUP_FILES]) {
+  it('match a fresh build from data/raw, byte for byte, and validate', () => {
+    const raw = loadRaw(RAW_DIR);
+    const fresh = buildRollups(raw, coords, raw.length === 0 ? 'empty' : 'live');
+    for (const name of ROLLUP_FILES) {
       const onDisk = readFileSync(join(DAY0_DIR, `${name}.json`), 'utf8');
       expect(onDisk, name).toBe(fresh.text[name]);
+      expect(rollupSchemaError(name, fresh.values[name]), name).toBeNull();
     }
   }, TIMEOUT);
 
-  it('writing a Day-0 build reproduces the committed files', () => {
+  it('writing a fresh build reproduces the committed files', () => {
     // Writes to a fresh OS temp directory, removed afterwards; never into data/ or the repo.
-    const dir = mkdtempSync(join(tmpdir(), 'day0-'));
+    const raw = loadRaw(RAW_DIR);
+    const dir = mkdtempSync(join(tmpdir(), 'rollups-'));
     try {
-      writeRollups(dir, buildRollups([], coords, 'empty'));
+      writeRollups(dir, buildRollups(raw, coords, raw.length === 0 ? 'empty' : 'live'));
       for (const name of ROLLUP_FILES) {
         expect(readFileSync(join(dir, `${name}.json`), 'utf8')).toBe(readFileSync(join(DAY0_DIR, `${name}.json`), 'utf8'));
       }
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  }, TIMEOUT);
+});
+
+describe('Day-0 empty build', () => {
+  it('has survey day 0, the empty source, no open tiers and no samples', () => {
+    const empty = buildRollups([], coords, 'empty');
+    const manifest = empty.values.manifest as { surveyDay: number; dataSource: string; tiers: Array<{ status: string }>; n: { samples: number } };
+    expect(manifest.surveyDay).toBe(0);
+    expect(manifest.dataSource).toBe('empty');
+    expect(manifest.tiers.filter((t) => t.status === 'open')).toEqual([]);
+    expect(manifest.n.samples).toBe(0);
+    for (const name of ROLLUP_FILES) {
+      expect(rollupSchemaError(name, empty.values[name]), name).toBeNull();
+    }
+  });
+
+  it('writes identical bytes from two independent temp directories', () => {
+    const a = mkdtempSync(join(tmpdir(), 'day0-a-'));
+    const b = mkdtempSync(join(tmpdir(), 'day0-b-'));
+    try {
+      writeRollups(a, buildRollups([], coords, 'empty'));
+      writeRollups(b, buildRollups([], coords, 'empty'));
+      for (const name of ROLLUP_FILES) {
+        expect(readFileSync(join(a, `${name}.json`), 'utf8')).toBe(readFileSync(join(b, `${name}.json`), 'utf8'));
+      }
+    } finally {
+      rmSync(a, { recursive: true, force: true });
+      rmSync(b, { recursive: true, force: true });
     }
   }, TIMEOUT);
 });

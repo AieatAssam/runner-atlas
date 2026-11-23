@@ -37,6 +37,7 @@ export function vendorFromBrand(brand: string | null | undefined): string {
   if (!brand) return 'unknown';
   const table: Array<[RegExp, string]> = [
     [/Intel/i, 'Intel'], [/AMD/i, 'AMD'], [/Apple/i, 'Apple'], [/Ampere/i, 'Ampere'], [/\bArm\b|Neoverse|Cortex/i, 'Arm'],
+    [/Cobalt/i, 'Microsoft'],
   ];
   for (const [re, name] of table) if (re.test(brand)) return name;
   return 'unknown';

@@ -1,4 +1,4 @@
-// SPEC 8 end-to-end checks. One file runs against both projects: `day-0` (committed rollups, standby)
+// SPEC 8 end-to-end checks. One file runs against both projects: `day-0` (empty rollups, standby)
 // and `day-90` (synthetic rollups, every tier open). Day-90-only checks say so and skip on day-0.
 import { test, expect, chromium, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
